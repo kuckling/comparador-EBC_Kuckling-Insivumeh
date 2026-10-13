@@ -25,7 +25,7 @@
 </table>
 
 <p align="center">
-  <a href="comparacion_EBC_vs_INSIVUMEH_corregido.html"><img alt="Abrir el comparador" src="https://img.shields.io/badge/%E2%96%B6%20ABRIR%20EL%20COMPARADOR-0284c7?style=for-the-badge&logoColor=white"></a>
+  <a href="https://kuckling.github.io/comparador-EBC_Kuckling-Insivumeh/"><img alt="Abrir el comparador" src="https://img.shields.io/badge/%E2%96%B6%20ABRIR%20EL%20COMPARADOR-0284c7?style=for-the-badge&logoColor=white"></a>
   &nbsp;
   <a href="https://insivumeh.gob.gt/img/Estaciones_Met/output_dashboard/INS160101CV.html"><img alt="Descargar CSV de INSIVUMEH Cobán" src="https://img.shields.io/badge/%E2%AC%87%20CSV%20INSIVUMEH%20COB%C3%81N-ea580c?style=for-the-badge"></a>
 </p>
