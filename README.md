@@ -67,7 +67,7 @@ Abre la página de la estación de Cobán y pulsa **Descargar CSV**:
 
 **2. Abre el comparador**
 
-Abre [`comparacion_EBC_vs_INSIVUMEH_corregido.html`](comparacion_EBC_vs_INSIVUMEH_corregido.html) en tu navegador.
+Abre [`https://kuckling.github.io/comparador-EBC_Kuckling-Insivumeh/`](comparacion_EBC_vs_INSIVUMEH_corregido.html) en tu navegador.
 
 **3. Carga el CSV**
 
