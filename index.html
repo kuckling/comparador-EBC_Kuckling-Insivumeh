@@ -232,7 +232,7 @@
                 <option value="teocinte">El Teocinte (1,242 m s.n.m.)</option>
             </select>
             <div style="margin-top: 8px;">
-                <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" oninput="onChannelInputDebounced()" onchange="onStationOrVariableChange()">
+                <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" onchange="onStationOrVariableChange()">
             </div>
             <span class="altitude-badge" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
         </div>
@@ -332,7 +332,6 @@
     let combinedData = [];
     let lineChartInstance = null;
     let scatterChartInstance = null;
-    let debounceTimer = null;
 
     const STATIONS_INFO = {
         coban: { name: 'Cobán', altitude: 1306, factor: 0.8546, defaultChannel: '3246611' },
@@ -367,48 +366,6 @@
         onStationOrVariableChange();
     }
 
-    function onChannelInputDebounced() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            onStationOrVariableChange();
-        }, 800);
-    }
-
-    function processFeedData(data) {
-        if (!data || !data.channel) return null;
-        thingSpeakRawFeeds = data.feeds || [];
-
-        const dailyGroups = {};
-        thingSpeakRawFeeds.forEach(feed => {
-            if (feed.created_at) {
-                const dateStr = feed.created_at.split('T')[0];
-                if (!dailyGroups[dateStr]) dailyGroups[dateStr] = { temp: [], hum: [], pres: [], lluvia: [] };
-
-                if (feed.field1 !== null && feed.field1 !== undefined && !isNaN(parseFloat(feed.field1))) dailyGroups[dateStr].temp.push(parseFloat(feed.field1));
-                if (feed.field2 !== null && feed.field2 !== undefined && !isNaN(parseFloat(feed.field2))) dailyGroups[dateStr].hum.push(parseFloat(feed.field2));
-                if (feed.field3 !== null && feed.field3 !== undefined && !isNaN(parseFloat(feed.field3))) dailyGroups[dateStr].pres.push(parseFloat(feed.field3));
-                if (feed.field4 !== null && feed.field4 !== undefined && !isNaN(parseFloat(feed.field4))) dailyGroups[dateStr].lluvia.push(parseFloat(feed.field4));
-            }
-        });
-
-        const feedsByDate = {};
-        Object.keys(dailyGroups).forEach(date => {
-            const g = dailyGroups[date];
-            const avg = arr => arr.length > 0 ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
-
-            feedsByDate[date] = {
-                tempMedia: avg(g.temp),
-                tempMax: g.temp.length > 0 ? Math.max(...g.temp) : null,
-                tempMin: g.temp.length > 0 ? Math.min(...g.temp) : null,
-                humedad: avg(g.hum),
-                presion: avg(g.pres),
-                lluvia: g.lluvia.length > 0 ? g.lluvia.reduce((a,b) => a+b, 0) : null
-            };
-        });
-
-        return feedsByDate;
-    }
-
     async function fetchThingSpeakData(channelId) {
         if (!channelId) {
             setStatus('offline', 'Sin ID de Canal');
@@ -417,59 +374,53 @@
 
         setStatus('loading', `Conectando a Canal #${channelId}...`);
 
-        // Intento 1: Fetch estándar HTTP/HTTPS
         try {
-            const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800`);
-            if (response.ok) {
-                const data = await response.json();
-                const res = processFeedData(data);
-                if (res) {
-                    setStatus('online', `Conectado: ${data.channel.name || 'Canal #' + channelId}`);
-                    return res;
+            const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Canal Privado o No Encontrado');
+
+            const data = await response.json();
+            const chName = (data.channel && data.channel.name) ? data.channel.name : `Canal #${channelId}`;
+            setStatus('online', `Conectado: ${chName}`);
+
+            thingSpeakRawFeeds = data.feeds || [];
+
+            const dailyGroups = {};
+            thingSpeakRawFeeds.forEach(feed => {
+                if (feed.created_at) {
+                    const dateStr = feed.created_at.split('T')[0];
+                    if (!dailyGroups[dateStr]) dailyGroups[dateStr] = { temp: [], hum: [], pres: [], lluvia: [] };
+
+                    if (feed.field1 !== null && feed.field1 !== undefined && !isNaN(parseFloat(feed.field1))) dailyGroups[dateStr].temp.push(parseFloat(feed.field1));
+                    if (feed.field2 !== null && feed.field2 !== undefined && !isNaN(parseFloat(feed.field2))) dailyGroups[dateStr].hum.push(parseFloat(feed.field2));
+                    if (feed.field3 !== null && feed.field3 !== undefined && !isNaN(parseFloat(feed.field3))) dailyGroups[dateStr].pres.push(parseFloat(feed.field3));
+                    if (feed.field4 !== null && feed.field4 !== undefined && !isNaN(parseFloat(feed.field4))) dailyGroups[dateStr].lluvia.push(parseFloat(feed.field4));
                 }
-            }
-        } catch (e) {
-            console.warn("Intento fetch directo omitido, usando adaptador JSONP...", e);
+            });
+
+            const feedsByDate = {};
+            Object.keys(dailyGroups).forEach(date => {
+                const g = dailyGroups[date];
+                const avg = arr => arr.length > 0 ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
+
+                feedsByDate[date] = {
+                    tempMedia: avg(g.temp),
+                    tempMax: g.temp.length > 0 ? Math.max(...g.temp) : null,
+                    tempMin: g.temp.length > 0 ? Math.min(...g.temp) : null,
+                    humedad: avg(g.hum),
+                    presion: avg(g.pres),
+                    lluvia: g.lluvia.length > 0 ? g.lluvia.reduce((a,b) => a+b, 0) : null
+                };
+            });
+
+            return feedsByDate;
+
+        } catch (error) {
+            console.warn(error);
+            setStatus('offline', `Canal #${channelId} No Responde / Privado`);
+            thingSpeakRawFeeds = [];
+            return {};
         }
-
-        // Intento 2: JSONP Fallback con manejo estricto de timeout
-        return new Promise((resolve) => {
-            const cbName = 'ts_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-            const script = document.createElement('script');
-
-            const timer = setTimeout(() => {
-                cleanup();
-                setStatus('offline', `Canal #${channelId} No Responde / Privado`);
-                resolve({});
-            }, 6000);
-
-            function cleanup() {
-                clearTimeout(timer);
-                if (script.parentNode) script.parentNode.removeChild(script);
-                delete window[cbName];
-            }
-
-            window[cbName] = function(data) {
-                cleanup();
-                const res = processFeedData(data);
-                if (res) {
-                    setStatus('online', `Conectado: ${data.channel.name || 'Canal #' + channelId}`);
-                    resolve(res);
-                } else {
-                    setStatus('offline', `Canal #${channelId} Privado o Sin Datos`);
-                    resolve({});
-                }
-            };
-
-            script.onerror = function() {
-                cleanup();
-                setStatus('offline', `Error al Conectar Canal #${channelId}`);
-                resolve({});
-            };
-
-            script.src = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800&callback=${cbName}`;
-            document.head.appendChild(script);
-        });
     }
 
     async function onStationOrVariableChange() {
@@ -541,6 +492,7 @@
 
             let localVal = rawLocal;
 
+            // Corrección exclusiva: Convertir Presión a Nivel del Mar (>800 hPa) a Presión de Estación Local
             if (selectedVar === 'presion') {
                 if (rawLocal > 800) {
                     localVal = parseFloat((rawLocal * station.factor).toFixed(1));
@@ -704,4 +656,34 @@
 
     function exportToCSV() {
         if (combinedData.length === 0) return alert('No hay datos para exportar.');
-        let csvContent
+        let csvContent = "data:text/csv;charset=utf-8,Fecha,INSIVUMEH_Oficial,Red_EBC_ThingSpeak,Delta,Error_Relativo_Pct\n";
+        combinedData.forEach(d => {
+            csvContent += `${d.fecha},${d.insivumeh},${d.ebc},${d.delta},${d.errRel}\n`;
+        });
+        triggerDownload(csvContent, '03_Comparativa_Procesada_RedEBC_vs_INSIVUMEH.csv');
+    }
+
+    function triggerDownload(content, filename) {
+        const encodedUri = encodeURI(content);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function clearStoredData() {
+        if (confirm('¿Desea borrar todos los datos guardados en el navegador?')) {
+            localStorage.removeItem('ebc_insivumeh_history');
+            rawInsivumehData = [];
+            thingSpeakFeedsByDate = {};
+            thingSpeakRawFeeds = [];
+            combinedData = [];
+            location.reload();
+        }
+    }
+</script>
+
+</body>
+</html>
