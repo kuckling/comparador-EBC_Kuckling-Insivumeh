@@ -375,7 +375,8 @@
         setStatus('loading', `Conectando a Canal #${channelId}...`);
 
         try {
-            const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800`;
+            // Descargar 8,000 resultados para abarcar todo el mes desde septiembre
+            const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=8000`;
             const response = await fetch(url);
             if (!response.ok) throw new Error('Canal Privado o No Encontrado');
 
@@ -483,35 +484,39 @@
         combinedData = rawInsivumehData.map(item => {
             const insVal = item[selectedVar];
             let rawLocal = null;
+            let hasRealTSData = false;
 
-            if (thingSpeakFeedsByDate && thingSpeakFeedsByDate[item.fecha] && thingSpeakFeedsByDate[item.fecha][selectedVar] !== null) {
+            if (thingSpeakFeedsByDate && thingSpeakFeedsByDate[item.fecha] && thingSpeakFeedsByDate[item.fecha][selectedVar] !== null && !isNaN(thingSpeakFeedsByDate[item.fecha][selectedVar])) {
                 rawLocal = thingSpeakFeedsByDate[item.fecha][selectedVar];
-            } else {
-                rawLocal = insVal;
+                hasRealTSData = true;
             }
 
-            let localVal = rawLocal;
+            let localVal = null;
+            let delta = null;
+            let errRel = null;
 
-            // Corrección exclusiva: Convertir Presión a Nivel del Mar (>800 hPa) a Presión de Estación Local
-            if (selectedVar === 'presion') {
-                if (rawLocal > 800) {
-                    localVal = parseFloat((rawLocal * station.factor).toFixed(1));
+            if (hasRealTSData) {
+                if (selectedVar === 'presion') {
+                    if (rawLocal > 800) {
+                        localVal = parseFloat((rawLocal * station.factor).toFixed(1));
+                    } else {
+                        localVal = parseFloat(rawLocal.toFixed(1));
+                    }
                 } else {
                     localVal = parseFloat(rawLocal.toFixed(1));
                 }
-            } else {
-                localVal = parseFloat(rawLocal.toFixed(1));
-            }
 
-            const delta = parseFloat((localVal - insVal).toFixed(2));
-            const errRel = insVal !== 0 ? parseFloat(((delta / insVal) * 100).toFixed(2)) : 0;
+                delta = parseFloat((localVal - insVal).toFixed(2));
+                errRel = insVal !== 0 ? parseFloat(((delta / insVal) * 100).toFixed(2)) : 0;
+            }
 
             return {
                 fecha: item.fecha,
                 insivumeh: insVal,
                 ebc: localVal,
                 delta: delta,
-                errRel: errRel
+                errRel: errRel,
+                hasTS: hasRealTSData
             };
         });
 
@@ -521,12 +526,20 @@
     }
 
     function calcularMetricas(data) {
-        const n = data.length;
-        if (n === 0) return;
+        const validPairs = data.filter(d => d.hasTS && d.ebc !== null);
+        const n = validPairs.length;
+
+        if (n === 0) {
+            document.getElementById('metricR').innerText = '--';
+            document.getElementById('metricR2').innerText = '--';
+            document.getElementById('metricRMSE').innerText = '--';
+            document.getElementById('metricBias').innerText = '--';
+            return;
+        }
 
         let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0, sumDiff2 = 0, sumDiff = 0;
 
-        data.forEach(d => {
+        validPairs.forEach(d => {
             const x = d.insivumeh;
             const y = d.ebc;
             sumX += x;
@@ -578,7 +591,8 @@
                         borderColor: '#38bdf8',
                         backgroundColor: 'rgba(56, 189, 248, 0.1)',
                         borderWidth: 2,
-                        tension: 0.15
+                        tension: 0.15,
+                        spanGaps: true
                     }
                 ]
             },
@@ -596,7 +610,7 @@
         const ctxScatter = document.getElementById('scatterChart').getContext('2d');
         if (scatterChartInstance) scatterChartInstance.destroy();
 
-        const scatterData = data.map(d => ({ x: d.insivumeh, y: d.ebc }));
+        const scatterData = data.filter(d => d.hasTS && d.ebc !== null).map(d => ({ x: d.insivumeh, y: d.ebc }));
 
         scatterChartInstance = new Chart(ctxScatter, {
             type: 'scatter',
@@ -625,13 +639,23 @@
 
         data.forEach(d => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${d.fecha}</strong></td>
-                <td>${d.insivumeh} ${unit}</td>
-                <td>${d.ebc} ${unit}</td>
-                <td style="color: ${d.delta >= 0 ? '#fb923c' : '#38bdf8'}; font-weight: bold;">${d.delta > 0 ? '+' : ''}${d.delta} ${unit}</td>
-                <td>${d.errRel}%</td>
-            `;
+            if (d.hasTS && d.ebc !== null) {
+                tr.innerHTML = `
+                    <td><strong>${d.fecha}</strong></td>
+                    <td>${d.insivumeh} ${unit}</td>
+                    <td>${d.ebc} ${unit}</td>
+                    <td style="color: ${d.delta >= 0 ? '#fb923c' : '#38bdf8'}; font-weight: bold;">${d.delta > 0 ? '+' : ''}${d.delta} ${unit}</td>
+                    <td>${d.errRel}%</td>
+                `;
+            } else {
+                tr.innerHTML = `
+                    <td><strong>${d.fecha}</strong></td>
+                    <td>${d.insivumeh} ${unit}</td>
+                    <td style="color: var(--text-secondary); italic;">Sin Datos IoT (N/A)</td>
+                    <td style="color: var(--text-secondary);">--</td>
+                    <td style="color: var(--text-secondary);">--</td>
+                `;
+            }
             tbody.appendChild(tr);
         });
     }
@@ -658,7 +682,10 @@
         if (combinedData.length === 0) return alert('No hay datos para exportar.');
         let csvContent = "data:text/csv;charset=utf-8,Fecha,INSIVUMEH_Oficial,Red_EBC_ThingSpeak,Delta,Error_Relativo_Pct\n";
         combinedData.forEach(d => {
-            csvContent += `${d.fecha},${d.insivumeh},${d.ebc},${d.delta},${d.errRel}\n`;
+            const ebcStr = d.ebc !== null ? d.ebc : "N/A";
+            const deltaStr = d.delta !== null ? d.delta : "N/A";
+            const errStr = d.errRel !== null ? d.errRel : "N/A";
+            csvContent += `${d.fecha},${d.insivumeh},${ebcStr},${deltaStr},${errStr}\n`;
         });
         triggerDownload(csvContent, '03_Comparativa_Procesada_RedEBC_vs_INSIVUMEH.csv');
     }
