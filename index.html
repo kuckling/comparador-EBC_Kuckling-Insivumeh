@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RED EBC KUCKLING - Validador Climatológico vs INSIVUMEH</title>
-    <!-- Chart.js y FontAwesome -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -20,188 +19,45 @@
             --accent-purple: #c084fc;
             --accent-red: #f87171;
         }
-
-        body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--card-bg);
-            padding: 16px 24px;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .logo-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo-title i {
-            font-size: 28px;
-            color: var(--accent-blue);
-        }
-
-        .logo-title h1 {
-            font-size: 20px;
-            margin: 0;
-            font-weight: 700;
-        }
-
-        .logo-title p {
-            margin: 0;
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: var(--accent-blue);
-            color: #0f172a;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s;
-        }
-
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background-color: var(--bg-dark); color: var(--text-primary); margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 16px 24px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .logo-title { display: flex; align-items: center; gap: 12px; }
+        .logo-title i { font-size: 28px; color: var(--accent-blue); }
+        .logo-title h1 { font-size: 20px; margin: 0; font-weight: 700; }
+        .logo-title p { margin: 0; font-size: 12px; color: var(--text-secondary); }
+        .header-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .btn { background: var(--accent-blue); color: #0f172a; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
         .btn:hover { filter: brightness(1.1); }
         .btn-green { background: var(--accent-green); }
         .btn-purple { background: var(--accent-purple); color: #0f172a; }
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 12px; border-radius: 20px; font-weight: 600; }
         .status-online { background: rgba(74, 222, 128, 0.15); color: var(--accent-green); border: 1px solid rgba(74, 222, 128, 0.3); }
         .status-offline { background: rgba(248, 113, 113, 0.15); color: var(--accent-red); border: 1px solid rgba(248, 113, 113, 0.3); }
         .status-loading { background: rgba(251, 146, 60, 0.15); color: var(--accent-orange); border: 1px solid rgba(251, 146, 60, 0.3); }
-
-        .grid-config {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .card-title {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-top: 0;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        select, input[type="file"], input[type="text"] {
-            width: 100%;
-            background: #0f172a;
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 14px;
-        }
-
-        .audit-box {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px dashed var(--accent-blue);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
+        .grid-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; }
+        .card-title { font-size: 14px; color: var(--text-secondary); margin-top: 0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        select, input[type="file"], input[type="text"], input[type="password"] { width: 100%; background: #0f172a; border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .audit-box { background: rgba(15, 23, 42, 0.6); border: 1px dashed var(--accent-blue); border-radius: 8px; padding: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
         .audit-info { font-size: 13px; color: var(--text-secondary); }
         .audit-info strong { color: var(--accent-blue); }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .metric-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .metric-val {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--accent-blue);
-            margin: 8px 0 4px 0;
-        }
-
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .metric-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 16px; text-align: center; }
+        .metric-val { font-size: 26px; font-weight: 800; color: var(--accent-blue); margin: 8px 0 4px 0; }
         .metric-label { font-size: 12px; color: var(--text-secondary); }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
+        .calib-box { background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.35); border-radius: 12px; padding: 14px 18px; margin-bottom: 20px; font-size: 14px; line-height: 1.6; }
+        .calib-box strong { color: var(--accent-green); }
+        .warn-box { background: rgba(251, 146, 60, 0.1); border: 1px solid rgba(251, 146, 60, 0.4); border-radius: 12px; padding: 10px 16px; margin-bottom: 20px; font-size: 13px; color: var(--accent-orange); display: none; }
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
         @media (max-width: 1024px) { .charts-grid { grid-template-columns: 1fr; } }
-
         .chart-container { position: relative; height: 380px; width: 100%; }
-
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { background: #0f172a; color: var(--text-secondary); }
-
-        .altitude-badge { font-size: 11px; color: var(--accent-blue); margin-top: 6px; display: block; }
+        th { background: #0f172a; color: var(--text-secondary); position: sticky; top: 0; }
+        .small-info { font-size: 11px; color: var(--accent-blue); margin-top: 6px; display: block; }
+        .nodata { color: var(--text-secondary); font-style: italic; }
     </style>
 </head>
 <body>
@@ -222,7 +78,6 @@
         </div>
     </header>
 
-    <!-- Controles -->
     <div class="grid-config">
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-tower-cell"></i> 1. Estación EBC & ID ThingSpeak</h3>
@@ -232,14 +87,18 @@
                 <option value="teocinte">El Teocinte (1,242 m s.n.m.)</option>
             </select>
             <div style="margin-top: 8px;">
-                <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" onchange="onStationOrVariableChange()">
+                <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" oninput="onChannelInputDebounced()">
             </div>
-            <span class="altitude-badge" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
+            <div style="margin-top: 8px;">
+                <input type="password" id="apiKeyInput" placeholder="Read API Key (solo si el canal es privado)" oninput="onChannelInputDebounced()">
+            </div>
+            <span class="small-info" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
         </div>
 
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-file-csv"></i> 2. Cargar CSV del INSIVUMEH</h3>
-            <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVUpload(event)">
+            <input type="file" id="csvFileInput" accept=".csv,.txt" onchange="handleCSVUpload(event)">
+            <span class="small-info" id="csvInfo">Sin archivo cargado.</span>
         </div>
 
         <div class="card">
@@ -252,14 +111,26 @@
                 <option value="presion" selected>Presión Atmosférica (hPa)</option>
                 <option value="lluvia">Precipitación (mm)</option>
             </select>
+            <div style="margin-top: 8px;">
+                <select id="pressureMode" onchange="actualizarVisualizacion()" title="Cómo interpretar la presión que reporta tu estación">
+                                        <option value="station">Presión EBC: usar field3 tal cual (nivel del mar, sin convertir)</option>
+                    <option value="sealevel" selected>Presión EBC: nivel del mar → estación (invierte la fórmula del firmware)</option>
+                </select>
+            </div>
+            <div style="margin-top: 8px;">
+                <select id="pressureUnitINS" onchange="actualizarVisualizacion()" title="Unidad de la columna Presion Atmosferica del CSV del INSIVUMEH">
+                    <option value="auto" selected>Presión INSIVUMEH: detectar unidad (mmHg / hPa)</option>
+                    <option value="mmhg">Presión INSIVUMEH: está en mmHg (convertir a hPa)</option>
+                    <option value="hpa">Presión INSIVUMEH: ya está en hPa</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <!-- Módulo de Verificación Científica -->
     <div class="audit-box">
         <div class="audit-info">
-            <i class="fa-solid fa-shield-halved" style="color: var(--accent-green);"></i> 
-            <strong>Módulo de Verificación Científica:</strong> Descargue los archivos fuentes originales para validar la autenticidad de los gráficos.
+            <i class="fa-solid fa-shield-halved" style="color: var(--accent-green);"></i>
+            <strong>Módulo de Verificación Científica:</strong> Descargue los archivos fuente originales para validar la autenticidad de los gráficos.
         </div>
         <div style="display: flex; gap: 10px;">
             <button class="btn btn-outline" onclick="downloadRawINSIVUMEH()"><i class="fa-solid fa-download"></i> Crudo INSIVUMEH (.csv)</button>
@@ -267,58 +138,49 @@
         </div>
     </div>
 
-    <!-- Métricas -->
+    <div class="warn-box" id="warnBox"></div>
+
     <div class="metrics-grid">
-        <div class="metric-card">
-            <div class="metric-label">Correlación Pearson (R)</div>
-            <div class="metric-val" id="metricR">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Determinación (R²)</div>
-            <div class="metric-val" id="metricR2" style="color: var(--accent-orange);">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Error Cuadrático Medio (RMSE)</div>
-            <div class="metric-val" id="metricRMSE" style="color: var(--accent-purple);">--</div>
-        </div>
-        <div class="metric-card">
-            <div class="metric-label">Sesgo Promedio (Bias)</div>
-            <div class="metric-val" id="metricBias" style="color: var(--accent-green);">--</div>
-        </div>
+        <div class="metric-card"><div class="metric-label">Correlación Pearson (R)</div><div class="metric-val" id="metricR">--</div></div>
+        <div class="metric-card"><div class="metric-label">Determinación (R²)</div><div class="metric-val" id="metricR2" style="color: var(--accent-orange);">--</div></div>
+        <div class="metric-card"><div class="metric-label">Error Cuadrático Medio (RMSE)</div><div class="metric-val" id="metricRMSE" style="color: var(--accent-purple);">--</div></div>
+        <div class="metric-card"><div class="metric-label">Error Absoluto Medio (MAE)</div><div class="metric-val" id="metricMAE" style="color: var(--accent-purple);">--</div></div>
+        <div class="metric-card"><div class="metric-label">Sesgo Promedio (EBC − INSIVUMEH)</div><div class="metric-val" id="metricBias" style="color: var(--accent-green);">--</div></div>
+        <div class="metric-card"><div class="metric-label">Días comparados</div><div class="metric-val" id="metricN" style="color: var(--text-primary);">--</div></div>
     </div>
 
-    <!-- Gráficas -->
+    <div class="calib-box" id="calibBox">
+        <i class="fa-solid fa-screwdriver-wrench" style="color: var(--accent-green);"></i>
+        <strong>Sugerencia de calibración:</strong> <span id="calibText">Cargue el CSV del INSIVUMEH para calcularla.</span>
+    </div>
+
     <div class="charts-grid">
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-chart-line"></i> Serie Temporal Comparativa (<span id="unitLabel">hPa</span>)</h3>
-            <div class="chart-container">
-                <canvas id="timeSeriesChart"></canvas>
-            </div>
+            <div class="chart-container"><canvas id="timeSeriesChart"></canvas></div>
         </div>
         <div class="card">
-            <h3 class="card-title"><i class="fa-solid fa-chart-scatter"></i> Diagrama de Dispersión (R)</h3>
-            <div class="chart-container">
-                <canvas id="scatterChart"></canvas>
-            </div>
+            <h3 class="card-title"><i class="fa-solid fa-bullseye"></i> Diagrama de Dispersión (línea 1:1)</h3>
+            <div class="chart-container"><canvas id="scatterChart"></canvas></div>
         </div>
     </div>
 
-    <!-- Tabla -->
     <div class="card">
-        <h3 class="card-title"><i class="fa-solid fa-table"></i> Registros Cruzados (<span id="countRecords">0</span> días en memoria)</h3>
-        <div style="overflow-x: auto; max-height: 300px;">
+        <h3 class="card-title"><i class="fa-solid fa-table"></i> Registros Cruzados (<span id="countRecords">0</span> días del INSIVUMEH, <span id="countMatched">0</span> con datos EBC)</h3>
+        <div style="overflow-x: auto; max-height: 340px;">
             <table>
                 <thead>
                     <tr>
                         <th>Fecha</th>
                         <th>INSIVUMEH (Oficial)</th>
                         <th>Red EBC (ThingSpeak IoT)</th>
+                        <th>Lecturas EBC</th>
                         <th>Diferencia (Delta)</th>
                         <th>Error Relativo (%)</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    <tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">Cargue un archivo CSV del INSIVUMEH para iniciar el análisis.</td></tr>
+                    <tr><td colspan="6" style="text-align:center; color: var(--text-secondary);">Cargue un archivo CSV del INSIVUMEH para iniciar el análisis.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -326,304 +188,452 @@
 </div>
 
 <script>
-    let rawInsivumehData = [];
-    let thingSpeakRawFeeds = [];
-    let thingSpeakFeedsByDate = {};
+    // ---------- Estado ----------
+    let rawInsivumehData = [];          // [{fecha:'YYYY-MM-DD', lluvia, tempMax, ...}] (valores null si no hay dato)
+    let thingSpeakRawFeeds = [];        // feeds crudos descargados (solo del rango del CSV)
+    let thingSpeakFeedsByDate = {};     // agregados diarios por fecha local
     let combinedData = [];
     let lineChartInstance = null;
     let scatterChartInstance = null;
+    let debounceTimer = null;
+    let fetchToken = 0;                 // evita que respuestas viejas pisen a las nuevas
+
+    const TZ_OFFSET_HOURS = -6;         // Guatemala (UTC-6, sin horario de verano)
+    const SEA_LEVEL_HPA = 1013.25;
 
     const STATIONS_INFO = {
-        coban: { name: 'Cobán', altitude: 1306, factor: 0.8546, defaultChannel: '3246611' },
-        gualan: { name: 'Gualán', altitude: 155, factor: 0.9818, defaultChannel: '3225843' },
+        coban:    { name: 'Cobán',       altitude: 1306, factor: 0.8546, defaultChannel: '3246611' },
+        gualan:   { name: 'Gualán',      altitude: 155,  factor: 0.9818, defaultChannel: '3225843' },
         teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '3314007' }
     };
 
-    const VARIABLE_UNITS = {
-        tempMedia: '°C', tempMax: '°C', tempMin: '°C',
-        humedad: '%', presion: 'hPa', lluvia: 'mm'
-    };
+    const VARIABLE_UNITS = { tempMedia: '°C', tempMax: '°C', tempMin: '°C', humedad: '%', presion: 'hPa', lluvia: 'mm' };
+    const VARIABLE_NAMES = { tempMedia: 'Temp. media', tempMax: 'Temp. máxima', tempMin: 'Temp. mínima', humedad: 'Humedad', presion: 'Presión', lluvia: 'Lluvia' };
 
-    window.onload = function() {
-        const stored = localStorage.getItem('ebc_insivumeh_history');
+    window.onload = function () {
+        const stored = localStorage.getItem('ebc_insivumeh_history_v2');
         if (stored) {
-            try { rawInsivumehData = JSON.parse(stored); } catch(e) { console.error(e); }
+            try { rawInsivumehData = JSON.parse(stored); } catch (e) { console.error(e); }
         }
+        updateCsvInfo();
         onStationOrVariableChange();
     };
 
+    // ---------- Utilidades ----------
     function setStatus(type, message) {
         const badge = document.getElementById('thingspeakStatus');
         badge.className = 'status-badge status-' + type;
-        let icon = type === 'online' ? 'fa-circle-check' : (type === 'loading' ? 'fa-spinner fa-spin' : 'fa-circle-xmark');
+        const icon = type === 'online' ? 'fa-circle-check' : (type === 'loading' ? 'fa-spinner fa-spin' : 'fa-circle-xmark');
         badge.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
     }
 
+    function showWarn(msg) {
+        const el = document.getElementById('warnBox');
+        if (!msg) { el.style.display = 'none'; el.innerHTML = ''; return; }
+        el.style.display = 'block';
+        el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> ' + msg;
+    }
+
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    function addDays(dateStr, n) {
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const dt = new Date(Date.UTC(y, m - 1, d + n));
+        return `${dt.getUTCFullYear()}-${pad2(dt.getUTCMonth() + 1)}-${pad2(dt.getUTCDate())}`;
+    }
+
+    // Convierte created_at (UTC o con offset) a la fecha local de Guatemala (YYYY-MM-DD)
+    function toLocalDate(createdAt) {
+        const ts = Date.parse(createdAt);
+        if (isNaN(ts)) return null;
+        return new Date(ts + TZ_OFFSET_HOURS * 3600 * 1000).toISOString().slice(0, 10);
+    }
+
+    // Acepta YYYY-MM-DD, YYYY/MM/DD y DD/MM/YYYY (formato guatemalteco)
+    function normalizeFecha(s) {
+        if (!s) return null;
+        s = String(s).replace(/"/g, '').trim();
+        let m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+        if (m) return `${m[1]}-${pad2(m[2])}-${pad2(m[3])}`;
+        m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+        if (m) return `${m[3]}-${pad2(m[2])}-${pad2(m[1])}`;
+        return null;
+    }
+
+    function fmt(v, d = 1) { return (v === null || v === undefined || isNaN(v)) ? '' : Number(v).toFixed(d); }
+
+    // ---------- Eventos de UI ----------
     function onStationSelectChange() {
-        const stationKey = document.getElementById('stationSelect').value;
-        const station = STATIONS_INFO[stationKey];
+        const station = STATIONS_INFO[document.getElementById('stationSelect').value];
         document.getElementById('channelIdInput').value = station.defaultChannel;
         onStationOrVariableChange();
     }
 
-    async function fetchThingSpeakData(channelId) {
-        if (!channelId) {
-            setStatus('offline', 'Sin ID de Canal');
-            return {};
-        }
+    function onChannelInputDebounced() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(onStationOrVariableChange, 700);
+    }
 
-        setStatus('loading', `Conectando a Canal #${channelId}...`);
+    // ---------- ThingSpeak ----------
+    function buildUrl(channelId, apiKey, params) {
+        const q = new URLSearchParams(params);
+        if (apiKey) q.set('api_key', apiKey);
+        return `https://api.thingspeak.com/channels/${channelId}/feeds.json?${q.toString()}`;
+    }
 
-        try {
-            // Descargar 8,000 resultados para abarcar todo el mes desde septiembre
-            const url = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=8000`;
+    // Descarga TODO el rango del CSV en ventanas de 2 días (límite de ThingSpeak: 8000 registros por consulta)
+    async function fetchThingSpeakRange(channelId, apiKey, desde, hasta, token) {
+        const feedsMap = new Map();
+        let chName = `Canal #${channelId}`;
+        let truncated = false;
+        const totalChunks = Math.ceil((new Date(hasta) - new Date(desde)) / (2 * 86400000)) + 1;
+        let idx = 0;
+
+        for (let d = desde; d <= hasta; d = addDays(d, 2)) {
+            if (token !== fetchToken) return null; // llegó una petición más nueva
+            idx++;
+            const chunkEnd = addDays(d, 1) > hasta ? hasta : addDays(d, 1);
+            // Día local 00:00 = 06:00 UTC; día local 23:59:59 = 05:59:59 UTC del día siguiente
+            const start = `${d} 06:00:00`;
+            const end = `${addDays(chunkEnd, 1)} 05:59:59`;
+            setStatus('loading', `Descargando ${idx}/${totalChunks} (${d})...`);
+
+            const url = buildUrl(channelId, apiKey, { start, end, results: 8000, timezone: 'UTC' });
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Canal Privado o No Encontrado');
-
+            if (!response.ok) throw new Error('Canal no encontrado o privado');
             const data = await response.json();
-            const chName = (data.channel && data.channel.name) ? data.channel.name : `Canal #${channelId}`;
-            setStatus('online', `Conectado: ${chName}`);
-
-            thingSpeakRawFeeds = data.feeds || [];
-
-            const dailyGroups = {};
-            thingSpeakRawFeeds.forEach(feed => {
-                if (feed.created_at) {
-                    const dateStr = feed.created_at.split('T')[0];
-                    if (!dailyGroups[dateStr]) dailyGroups[dateStr] = { temp: [], hum: [], pres: [], lluvia: [] };
-
-                    if (feed.field1 !== null && feed.field1 !== undefined && !isNaN(parseFloat(feed.field1))) dailyGroups[dateStr].temp.push(parseFloat(feed.field1));
-                    if (feed.field2 !== null && feed.field2 !== undefined && !isNaN(parseFloat(feed.field2))) dailyGroups[dateStr].hum.push(parseFloat(feed.field2));
-                    if (feed.field3 !== null && feed.field3 !== undefined && !isNaN(parseFloat(feed.field3))) dailyGroups[dateStr].pres.push(parseFloat(feed.field3));
-                    if (feed.field4 !== null && feed.field4 !== undefined && !isNaN(parseFloat(feed.field4))) dailyGroups[dateStr].lluvia.push(parseFloat(feed.field4));
-                }
-            });
-
-            const feedsByDate = {};
-            Object.keys(dailyGroups).forEach(date => {
-                const g = dailyGroups[date];
-                const avg = arr => arr.length > 0 ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
-
-                feedsByDate[date] = {
-                    tempMedia: avg(g.temp),
-                    tempMax: g.temp.length > 0 ? Math.max(...g.temp) : null,
-                    tempMin: g.temp.length > 0 ? Math.min(...g.temp) : null,
-                    humedad: avg(g.hum),
-                    presion: avg(g.pres),
-                    lluvia: g.lluvia.length > 0 ? g.lluvia.reduce((a,b) => a+b, 0) : null
-                };
-            });
-
-            return feedsByDate;
-
-        } catch (error) {
-            console.warn(error);
-            setStatus('offline', `Canal #${channelId} No Responde / Privado`);
-            thingSpeakRawFeeds = [];
-            return {};
+            if (data.channel && data.channel.name) chName = data.channel.name;
+            const feeds = data.feeds || [];
+            if (feeds.length >= 8000) truncated = true;
+            feeds.forEach(f => feedsMap.set(f.entry_id, f));
         }
+        return { feeds: Array.from(feedsMap.values()), chName, truncated };
+    }
+
+    function aggregateByLocalDate(feeds, altitude) {
+        const groups = {};
+        feeds.forEach(feed => {
+            const date = toLocalDate(feed.created_at);
+            if (!date) return;
+            if (!groups[date]) groups[date] = { temp: [], hum: [], pres: [], presEst: [] };
+            const push = (arr, v) => { const n = parseFloat(v); if (v !== null && v !== undefined && v !== '' && !isNaN(n)) arr.push(n); };
+            push(groups[date].temp, feed.field1);
+            push(groups[date].hum, feed.field2);
+            push(groups[date].pres, feed.field3);
+            // Campos del firmware: field1 T, field2 HR, field3 presión MSL, field4 PUNTO DE ROCÍO, field5 prob. lluvia, field6 LCL.
+            // La EBC aún no envía lluvia acumulada, por eso ya no se usa field4 como lluvia.
+            const Tc = parseFloat(feed.field1), Pm = parseFloat(feed.field3);
+            if (!isNaN(Pm)) {
+                const Tk = (isNaN(Tc) ? 15 : Tc) + 273.15;
+                // Inversión exacta de la fórmula del firmware: Pmsl = P * (1 - 0.0065*h/(T+273.15))^(-5.257)
+                groups[date].presEst.push(Pm * Math.pow(1 - (0.0065 * altitude) / Tk, 5.257));
+            }
+        });
+
+        const out = {};
+        Object.keys(groups).forEach(date => {
+            const g = groups[date];
+            const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+            out[date] = {
+                tempMedia: avg(g.temp),
+                tempMax: g.temp.length ? Math.max(...g.temp) : null,
+                tempMin: g.temp.length ? Math.min(...g.temp) : null,
+                humedad: avg(g.hum),
+                presion: avg(g.pres),
+                presionEst: avg(g.presEst),
+                lluvia: null,
+                nLecturas: Math.max(g.temp.length, g.hum.length, g.pres.length)
+            };
+        });
+        return out;
     }
 
     async function onStationOrVariableChange() {
-        const stationKey = document.getElementById('stationSelect').value;
-        const station = STATIONS_INFO[stationKey];
+        const station = STATIONS_INFO[document.getElementById('stationSelect').value];
         const channelId = document.getElementById('channelIdInput').value.trim();
+        const apiKey = document.getElementById('apiKeyInput').value.trim();
+        document.getElementById('altitudeInfo').innerHTML = `Altitud: ${station.altitude.toLocaleString()} m s.n.m. | Presión: se convierte lectura por lectura con la T de la EBC`;
 
-        document.getElementById('altitudeInfo').innerHTML = `Altitud: ${station.altitude.toLocaleString()} m s.n.m. | Factor ISA: ${station.factor}`;
+        const token = ++fetchToken;
+        thingSpeakRawFeeds = [];
+        thingSpeakFeedsByDate = {};
 
-        thingSpeakFeedsByDate = await fetchThingSpeakData(channelId);
-        actualizarVisualizacion();
-    }
-
-    function handleCSVUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) { parseInsivumehCSV(e.target.result); };
-        reader.readAsText(file);
-    }
-
-    function parseInsivumehCSV(csvText) {
-        const lines = csvText.trim().split('\n');
-        if (lines.length < 2) return;
-
-        const parsed = [];
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            const cols = lines[i].split(',').map(c => c.trim());
-            const fecha = cols[0];
-            if (fecha) {
-                parsed.push({
-                    fecha: fecha,
-                    lluvia: parseFloat(cols[1]) || 0,
-                    tempMax: parseFloat(cols[2]) || 0,
-                    tempMin: parseFloat(cols[3]) || 0,
-                    tempMedia: parseFloat(cols[4]) || 0,
-                    humedad: parseFloat(cols[6]) || 0,
-                    presion: parseFloat(cols[11]) || 0
-                });
-            }
-        }
-
-        rawInsivumehData = parsed.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-        localStorage.setItem('ebc_insivumeh_history', JSON.stringify(rawInsivumehData));
-        actualizarVisualizacion();
-    }
-
-    function actualizarVisualizacion() {
-        if (rawInsivumehData.length === 0) return;
-
-        const stationKey = document.getElementById('stationSelect').value;
-        const station = STATIONS_INFO[stationKey];
-        const selectedVar = document.getElementById('variableSelect').value;
-        
-        document.getElementById('unitLabel').innerText = VARIABLE_UNITS[selectedVar];
-        document.getElementById('countRecords').innerText = rawInsivumehData.length;
-
-        combinedData = rawInsivumehData.map(item => {
-            const insVal = item[selectedVar];
-            let rawLocal = null;
-            let hasRealTSData = false;
-
-            if (thingSpeakFeedsByDate && thingSpeakFeedsByDate[item.fecha] && thingSpeakFeedsByDate[item.fecha][selectedVar] !== null && !isNaN(thingSpeakFeedsByDate[item.fecha][selectedVar])) {
-                rawLocal = thingSpeakFeedsByDate[item.fecha][selectedVar];
-                hasRealTSData = true;
-            }
-
-            let localVal = null;
-            let delta = null;
-            let errRel = null;
-
-            if (hasRealTSData) {
-                if (selectedVar === 'presion') {
-                    if (rawLocal > 800) {
-                        localVal = parseFloat((rawLocal * station.factor).toFixed(1));
-                    } else {
-                        localVal = parseFloat(rawLocal.toFixed(1));
-                    }
-                } else {
-                    localVal = parseFloat(rawLocal.toFixed(1));
-                }
-
-                delta = parseFloat((localVal - insVal).toFixed(2));
-                errRel = insVal !== 0 ? parseFloat(((delta / insVal) * 100).toFixed(2)) : 0;
-            }
-
-            return {
-                fecha: item.fecha,
-                insivumeh: insVal,
-                ebc: localVal,
-                delta: delta,
-                errRel: errRel,
-                hasTS: hasRealTSData
-            };
-        });
-
-        calcularMetricas(combinedData);
-        renderCharts(combinedData, VARIABLE_UNITS[selectedVar]);
-        renderTable(combinedData, VARIABLE_UNITS[selectedVar]);
-    }
-
-    function calcularMetricas(data) {
-        const validPairs = data.filter(d => d.hasTS && d.ebc !== null);
-        const n = validPairs.length;
-
-        if (n === 0) {
-            document.getElementById('metricR').innerText = '--';
-            document.getElementById('metricR2').innerText = '--';
-            document.getElementById('metricRMSE').innerText = '--';
-            document.getElementById('metricBias').innerText = '--';
+        if (!channelId) {
+            setStatus('offline', 'Sin ID de Canal');
+            actualizarVisualizacion();
             return;
         }
 
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0, sumDiff2 = 0, sumDiff = 0;
+        try {
+            if (rawInsivumehData.length === 0) {
+                // Sin CSV: solo probamos la conexión
+                setStatus('loading', `Conectando a Canal #${channelId}...`);
+                const r = await fetch(buildUrl(channelId, apiKey, { results: 1 }));
+                if (!r.ok) throw new Error('Canal no encontrado o privado');
+                const data = await r.json();
+                if (token !== fetchToken) return;
+                setStatus('online', `Conectado: ${(data.channel && data.channel.name) || 'Canal #' + channelId}`);
+            } else {
+                const fechas = rawInsivumehData.map(d => d.fecha).sort();
+                const res = await fetchThingSpeakRange(channelId, apiKey, fechas[0], fechas[fechas.length - 1], token);
+                if (res === null || token !== fetchToken) return;
+                thingSpeakRawFeeds = res.feeds;
+                thingSpeakFeedsByDate = aggregateByLocalDate(res.feeds, station.altitude);
+                const dias = Object.keys(thingSpeakFeedsByDate).length;
+                setStatus('online', `Conectado: ${res.chName} — ${res.feeds.length} lecturas, ${dias} días`);
+                showWarn(res.truncated ? 'Alguna ventana de 2 días superó 8000 registros y pudo quedar truncada. Avíseme y la divido en ventanas más cortas.' : '');
+            }
+        } catch (error) {
+            if (token !== fetchToken) return;
+            console.warn(error);
+            setStatus('offline', `Canal #${channelId} sin respuesta / privado`);
+        }
+        actualizarVisualizacion();
+    }
 
-        validPairs.forEach(d => {
-            const x = d.insivumeh;
-            const y = d.ebc;
-            sumX += x;
-            sumY += y;
-            sumXY += (x * y);
-            sumX2 += (x * x);
-            sumY2 += (y * y);
-            sumDiff2 += Math.pow(y - x, 2);
-            sumDiff += (y - x);
+    // ---------- CSV INSIVUMEH ----------
+    function handleCSVUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => parseInsivumehCSV(e.target.result);
+        reader.readAsText(file);
+    }
+
+    function parseLine(line, delim) {
+        const out = []; let cur = '', q = false;
+        for (const ch of line) {
+            if (ch === '"') q = !q;
+            else if (ch === delim && !q) { out.push(cur); cur = ''; }
+            else cur += ch;
+        }
+        out.push(cur);
+        return out.map(s => s.trim());
+    }
+
+    function normHeader(h) {
+        return String(h).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    function detectColumns(headers) {
+        const H = headers.map(normHeader);
+        const find = (fn, fallback) => { const i = H.findIndex(fn); return i >= 0 ? { idx: i, auto: true } : { idx: fallback, auto: false }; };
+        const isTemp = h => /temp|^t[\s._-]?(max|min|med|prom)/.test(h);
+        return {
+            fecha:     find(h => /fecha|date/.test(h), 0),
+            lluvia:    find(h => /lluv|precip|rain/.test(h), 1),
+            tempMax:   find(h => isTemp(h) && /max/.test(h), 2),
+            tempMin:   find(h => isTemp(h) && /min/.test(h), 3),
+            tempMedia: find(h => isTemp(h) && /(media|prom|mean|med)/.test(h), 4),
+            humedad:   find(h => /hum|^hr/.test(h) && !/max|min/.test(h), 6),
+            presion:   find(h => /pres|hpa|baro/.test(h), 11)
+        };
+    }
+
+    function parseInsivumehCSV(csvText) {
+        csvText = csvText.replace(/^\uFEFF/, '');
+        const lines = csvText.split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) { alert('El CSV está vacío o solo tiene encabezado.'); return; }
+
+        const counts = { ',': 0, ';': 0, '\t': 0 };
+        Object.keys(counts).forEach(k => counts[k] = (lines[0].split(k).length - 1));
+        const delim = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+
+        const headers = parseLine(lines[0], delim);
+        const cols = detectColumns(headers);
+        const num = v => {
+            if (v === undefined || v === null) return null;
+            let s = String(v).replace(/"/g, '').trim();
+            if (delim !== ',') s = s.replace(',', '.');
+            const n = parseFloat(s);
+            return isNaN(n) ? null : n;
+        };
+
+        const parsed = [];
+        let descartadas = 0;
+        for (let i = 1; i < lines.length; i++) {
+            const c = parseLine(lines[i], delim);
+            const fecha = normalizeFecha(c[cols.fecha.idx]);
+            if (!fecha) { descartadas++; continue; }
+            parsed.push({
+                fecha,
+                lluvia: num(c[cols.lluvia.idx]),
+                tempMax: num(c[cols.tempMax.idx]),
+                tempMin: num(c[cols.tempMin.idx]),
+                tempMedia: num(c[cols.tempMedia.idx]),
+                humedad: num(c[cols.humedad.idx]),
+                presion: num(c[cols.presion.idx])
+            });
+        }
+
+        // Quitar fechas duplicadas (se conserva la última) y ordenar
+        const byDate = new Map();
+        parsed.forEach(p => byDate.set(p.fecha, p));
+        rawInsivumehData = Array.from(byDate.values()).sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+        const nombre = k => `${VARIABLE_NAMES[k]}: «${headers[cols[k].idx] ?? '?'}»${cols[k].auto ? '' : ' (por posición)'}`;
+        window._colInfo = ['tempMedia', 'tempMax', 'tempMin', 'humedad', 'presion', 'lluvia'].map(nombre).join(' · ')
+            + (descartadas ? ` · ${descartadas} filas descartadas (fecha inválida)` : '');
+
+        try { localStorage.setItem('ebc_insivumeh_history_v2', JSON.stringify(rawInsivumehData)); } catch (e) {}
+        updateCsvInfo();
+        onStationOrVariableChange(); // vuelve a descargar ThingSpeak para el rango exacto del CSV
+    }
+
+    function updateCsvInfo() {
+        const el = document.getElementById('csvInfo');
+        if (rawInsivumehData.length === 0) { el.textContent = 'Sin archivo cargado.'; return; }
+        const f = rawInsivumehData;
+        el.innerHTML = `${f.length} días: ${f[0].fecha} → ${f[f.length - 1].fecha}` + (window._colInfo ? `<br><span style="color:#94a3b8">Columnas: ${window._colInfo}</span>` : '');
+    }
+
+    // ---------- Presión ----------
+    function ajustarPresion(raw, station) {
+        const mode = document.getElementById('pressureMode').value;
+        if (mode === 'station') return raw;
+        if (mode === 'sealevel') return raw * station.factor;
+        // auto: ¿el valor está más cerca de la presión de estación esperada o de la de nivel del mar?
+        const stationP = SEA_LEVEL_HPA * station.factor;
+        return Math.abs(raw - stationP) <= Math.abs(raw - SEA_LEVEL_HPA) ? raw : raw * station.factor;
+    }
+
+    // La columna "Presion Atmosferica" del INSIVUMEH viene en mmHg (ej. 653.5 en Cobán = ~871 hPa)
+    const MMHG_TO_HPA = 1.33322;
+    function ajustarPresionINS(raw, station) {
+        const mode = document.getElementById('pressureUnitINS').value;
+        if (mode === 'hpa') return raw;
+        if (mode === 'mmhg') return raw * MMHG_TO_HPA;
+        // auto: elegir la unidad cuyo valor queda más cerca de la presión de estación esperada por altitud
+        const expected = SEA_LEVEL_HPA * station.factor;
+        return Math.abs(raw * MMHG_TO_HPA - expected) < Math.abs(raw - expected) ? raw * MMHG_TO_HPA : raw;
+    }
+
+    // ---------- Cruce de datos ----------
+    function actualizarVisualizacion() {
+        if (rawInsivumehData.length === 0) return;
+
+        const station = STATIONS_INFO[document.getElementById('stationSelect').value];
+        const selectedVar = document.getElementById('variableSelect').value;
+        const unit = VARIABLE_UNITS[selectedVar];
+        document.getElementById('unitLabel').innerText = unit;
+        document.getElementById('countRecords').innerText = rawInsivumehData.length;
+
+        combinedData = rawInsivumehData.map(item => {
+            let insVal = item[selectedVar];
+            if (selectedVar === 'presion' && insVal !== null && insVal !== undefined) {
+                insVal = parseFloat(ajustarPresionINS(insVal, station).toFixed(2));
+            }
+            const feed = thingSpeakFeedsByDate[item.fecha];
+            let ebcVal = (feed && feed[selectedVar] !== null && feed[selectedVar] !== undefined) ? feed[selectedVar] : null;
+            if (selectedVar === 'presion') {
+                ebcVal = !feed ? null : (document.getElementById('pressureMode').value === 'station' ? feed.presion : feed.presionEst);
+                if (ebcVal === undefined) ebcVal = null;
+            }
+
+            // IMPORTANTE: si la EBC no tiene dato ese día, queda en null (ya NO se copia el valor del INSIVUMEH)
+            const ebc = ebcVal === null ? null : parseFloat(ebcVal.toFixed(2));
+            const hasBoth = ebc !== null && insVal !== null && insVal !== undefined;
+            const delta = hasBoth ? parseFloat((ebc - insVal).toFixed(2)) : null;
+            const errRel = hasBoth && insVal !== 0 ? parseFloat(((delta / insVal) * 100).toFixed(2)) : null;
+
+            return {
+                fecha: item.fecha,
+                insivumeh: (insVal === undefined ? null : insVal),
+                ebc, delta, errRel,
+                nLecturas: feed ? feed.nLecturas : 0
+            };
         });
 
-        const numR = (n * sumXY) - (sumX * sumY);
-        const denR = Math.sqrt(((n * sumX2) - Math.pow(sumX, 2)) * ((n * sumY2) - Math.pow(sumY, 2)));
-        const r = denR !== 0 ? (numR / denR) : 0;
-        const r2 = Math.pow(r, 2);
+        const matched = combinedData.filter(d => d.delta !== null).length;
+        document.getElementById('countMatched').innerText = matched;
+
+        calcularMetricas(combinedData, unit);
+        renderCharts(combinedData, unit);
+        renderTable(combinedData, unit);
+    }
+
+    function calcularMetricas(data, unit) {
+        const pairs = data.filter(d => d.delta !== null);
+        const n = pairs.length;
+        const set = (id, v) => document.getElementById(id).innerText = v;
+
+        set('metricN', `${n} / ${data.length}`);
+        if (n < 2) {
+            ['metricR', 'metricR2', 'metricRMSE', 'metricMAE', 'metricBias'].forEach(id => set(id, '--'));
+            document.getElementById('calibText').innerText = n === 0
+                ? 'No hay días en común con datos de la EBC. Revise el ID del canal, el rango de fechas del CSV y que los campos (field1..4) tengan datos.'
+                : 'Se necesitan al menos 2 días en común para calcular.';
+            return;
+        }
+
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0, sumDiff2 = 0, sumDiff = 0, sumAbs = 0;
+        pairs.forEach(d => {
+            const x = d.insivumeh, y = d.ebc;
+            sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x; sumY2 += y * y;
+            sumDiff2 += (y - x) ** 2; sumDiff += (y - x); sumAbs += Math.abs(y - x);
+        });
+
+        const denR = Math.sqrt((n * sumX2 - sumX ** 2) * (n * sumY2 - sumY ** 2));
+        const r = denR !== 0 ? (n * sumXY - sumX * sumY) / denR : 0;
         const rmse = Math.sqrt(sumDiff2 / n);
+        const mae = sumAbs / n;
         const bias = sumDiff / n;
 
-        document.getElementById('metricR').innerText = r.toFixed(3);
-        document.getElementById('metricR2').innerText = r2.toFixed(3);
-        document.getElementById('metricRMSE').innerText = rmse.toFixed(2);
-        document.getElementById('metricBias').innerText = (bias > 0 ? '+' : '') + bias.toFixed(2);
+        set('metricR', r.toFixed(3));
+        set('metricR2', (r * r).toFixed(3));
+        set('metricRMSE', rmse.toFixed(2));
+        set('metricMAE', mae.toFixed(2));
+        set('metricBias', (bias > 0 ? '+' : '') + bias.toFixed(2));
+
+        // Regresión: INSIVUMEH = a * EBC + b (para corregir la EBC hacia la referencia)
+        const denA = n * sumY2 - sumY ** 2;
+        const a = denA !== 0 ? (n * sumXY - sumX * sumY) / denA : 1;
+        const b = (sumX - a * sumY) / n;
+        const sign = v => v >= 0 ? '+' : '−';
+        document.getElementById('calibText').innerHTML =
+            `corrección aditiva simple: <strong>${bias > 0 ? 'restar' : 'sumar'} ${Math.abs(bias).toFixed(2)} ${unit}</strong> a la lectura EBC. ` +
+            `Corrección lineal (si hay error de escala): <strong>EBC_corregida = ${a.toFixed(4)} × EBC ${sign(b)} ${Math.abs(b).toFixed(3)}</strong> ` +
+            `(n = ${n} días, R² = ${(r * r).toFixed(3)}).`;
     }
 
     function renderCharts(data, unit) {
         const labels = data.map(d => d.fecha);
-        const insVals = data.map(d => d.insivumeh);
-        const ebcVals = data.map(d => d.ebc);
 
         const ctxLine = document.getElementById('timeSeriesChart').getContext('2d');
         if (lineChartInstance) lineChartInstance.destroy();
-
         lineChartInstance = new Chart(ctxLine, {
             type: 'line',
             data: {
-                labels: labels,
+                labels,
                 datasets: [
-                    {
-                        label: `INSIVUMEH (${unit})`,
-                        data: insVals,
-                        borderColor: '#fb923c',
-                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.15
-                    },
-                    {
-                        label: `Red EBC (IoT ThingSpeak) (${unit})`,
-                        data: ebcVals,
-                        borderColor: '#38bdf8',
-                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.15,
-                        spanGaps: true
-                    }
+                    { label: `INSIVUMEH (${unit})`, data: data.map(d => d.insivumeh), borderColor: '#fb923c', backgroundColor: 'rgba(251,146,60,0.1)', borderWidth: 2, tension: 0.15, spanGaps: false },
+                    { label: `Red EBC (IoT ThingSpeak) (${unit})`, data: data.map(d => d.ebc), borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.1)', borderWidth: 2, tension: 0.15, spanGaps: false }
                 ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { labels: { color: '#f8fafc' } } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
-                }
+                scales: { x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }, y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } } }
             }
         });
 
+        const pairs = data.filter(d => d.delta !== null);
+        const scatterData = pairs.map(d => ({ x: d.insivumeh, y: d.ebc }));
+        const vals = scatterData.flatMap(p => [p.x, p.y]);
+        const lo = vals.length ? Math.min(...vals) : 0, hi = vals.length ? Math.max(...vals) : 1;
+
         const ctxScatter = document.getElementById('scatterChart').getContext('2d');
         if (scatterChartInstance) scatterChartInstance.destroy();
-
-        const scatterData = data.filter(d => d.hasTS && d.ebc !== null).map(d => ({ x: d.insivumeh, y: d.ebc }));
-
         scatterChartInstance = new Chart(ctxScatter, {
             type: 'scatter',
             data: {
-                datasets: [{
-                    label: `Correlación (${unit})`,
-                    data: scatterData,
-                    backgroundColor: '#c084fc'
-                }]
+                datasets: [
+                    { label: `Días comparados (${unit})`, data: scatterData, backgroundColor: '#c084fc' },
+                    { label: 'Línea 1:1 (calibración perfecta)', data: [{ x: lo, y: lo }, { x: hi, y: hi }], type: 'line', showLine: true, borderColor: '#4ade80', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 }
+                ]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { labels: { color: '#f8fafc' } } },
                 scales: {
                     x: { title: { display: true, text: `INSIVUMEH (${unit})`, color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
@@ -636,77 +646,51 @@
     function renderTable(data, unit) {
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = '';
-
         data.forEach(d => {
             const tr = document.createElement('tr');
-            if (d.hasTS && d.ebc !== null) {
-                tr.innerHTML = `
-                    <td><strong>${d.fecha}</strong></td>
-                    <td>${d.insivumeh} ${unit}</td>
-                    <td>${d.ebc} ${unit}</td>
-                    <td style="color: ${d.delta >= 0 ? '#fb923c' : '#38bdf8'}; font-weight: bold;">${d.delta > 0 ? '+' : ''}${d.delta} ${unit}</td>
-                    <td>${d.errRel}%</td>
-                `;
-            } else {
-                tr.innerHTML = `
-                    <td><strong>${d.fecha}</strong></td>
-                    <td>${d.insivumeh} ${unit}</td>
-                    <td style="color: var(--text-secondary); italic;">Sin Datos IoT (N/A)</td>
-                    <td style="color: var(--text-secondary);">--</td>
-                    <td style="color: var(--text-secondary);">--</td>
-                `;
-            }
+            const ins = d.insivumeh === null ? '<span class="nodata">s/d</span>' : `${d.insivumeh} ${unit}`;
+            const ebc = d.ebc === null ? '<span class="nodata">Sin datos EBC</span>' : `${d.ebc} ${unit}`;
+            const delta = d.delta === null ? '<span class="nodata">—</span>' : `<span style="color:${d.delta >= 0 ? '#fb923c' : '#38bdf8'}; font-weight:bold;">${d.delta > 0 ? '+' : ''}${d.delta} ${unit}</span>`;
+            const err = d.errRel === null ? '<span class="nodata">—</span>' : `${d.errRel}%`;
+            tr.innerHTML = `<td><strong>${d.fecha}</strong></td><td>${ins}</td><td>${ebc}</td><td>${d.nLecturas || 0}</td><td>${delta}</td><td>${err}</td>`;
             tbody.appendChild(tr);
         });
     }
 
+    // ---------- Descargas ----------
+    function triggerDownload(text, filename) {
+        const blob = new Blob(['\uFEFF' + text], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
     function downloadRawINSIVUMEH() {
         if (rawInsivumehData.length === 0) return alert('No ha cargado ningún archivo del INSIVUMEH.');
-        let csv = "data:text/csv;charset=utf-8,Fecha,Lluvia_mm,Temp_Max_C,Temp_Min_C,Temp_Media_C,Humedad_Pct,Presion_hPa\n";
-        rawInsivumehData.forEach(d => {
-            csv += `${d.fecha},${d.lluvia},${d.tempMax},${d.tempMin},${d.tempMedia},${d.humedad},${d.presion}\n`;
-        });
+        let csv = 'Fecha,Lluvia_mm,Temp_Max_C,Temp_Min_C,Temp_Media_C,Humedad_Pct,Presion_original_sin_convertir(mmHg)\n';
+        rawInsivumehData.forEach(d => { csv += `${d.fecha},${fmt(d.lluvia, 2)},${fmt(d.tempMax)},${fmt(d.tempMin)},${fmt(d.tempMedia)},${fmt(d.humedad)},${fmt(d.presion)}\n`; });
         triggerDownload(csv, '01_Datos_Crudos_INSIVUMEH_Oficial.csv');
     }
 
     function downloadRawThingSpeak() {
         if (thingSpeakRawFeeds.length === 0) return alert('No hay datos descargados desde la API de ThingSpeak.');
-        let csv = "data:text/csv;charset=utf-8,created_at,entry_id,field1_temp,field2_hum,field3_pres,field4_lluvia\n";
-        thingSpeakRawFeeds.forEach(f => {
-            csv += `${f.created_at},${f.entry_id},${f.field1 || ''},${f.field2 || ''},${f.field3 || ''},${f.field4 || ''}\n`;
-        });
+        let csv = 'created_at,entry_id,field1_temp_C,field2_hum_pct,field3_presion_MSL_hPa,field4_rocio_C,field5_prob_lluvia,field6_LCL_m\n';
+        thingSpeakRawFeeds.forEach(f => { csv += `${f.created_at},${f.entry_id},${f.field1 ?? ''},${f.field2 ?? ''},${f.field3 ?? ''},${f.field4 ?? ''},${f.field5 ?? ''},${f.field6 ?? ''}\n`; });
         triggerDownload(csv, '02_Datos_Crudos_ThingSpeak_API_REST.csv');
     }
 
     function exportToCSV() {
         if (combinedData.length === 0) return alert('No hay datos para exportar.');
-        let csvContent = "data:text/csv;charset=utf-8,Fecha,INSIVUMEH_Oficial,Red_EBC_ThingSpeak,Delta,Error_Relativo_Pct\n";
-        combinedData.forEach(d => {
-            const ebcStr = d.ebc !== null ? d.ebc : "N/A";
-            const deltaStr = d.delta !== null ? d.delta : "N/A";
-            const errStr = d.errRel !== null ? d.errRel : "N/A";
-            csvContent += `${d.fecha},${d.insivumeh},${ebcStr},${deltaStr},${errStr}\n`;
-        });
-        triggerDownload(csvContent, '03_Comparativa_Procesada_RedEBC_vs_INSIVUMEH.csv');
-    }
-
-    function triggerDownload(content, filename) {
-        const encodedUri = encodeURI(content);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        let csv = 'Fecha,INSIVUMEH_Oficial,Red_EBC_ThingSpeak,Lecturas_EBC,Delta,Error_Relativo_Pct\n';
+        combinedData.forEach(d => { csv += `${d.fecha},${d.insivumeh ?? ''},${d.ebc ?? ''},${d.nLecturas},${d.delta ?? ''},${d.errRel ?? ''}\n`; });
+        triggerDownload(csv, '03_Comparativa_Procesada_RedEBC_vs_INSIVUMEH.csv');
     }
 
     function clearStoredData() {
         if (confirm('¿Desea borrar todos los datos guardados en el navegador?')) {
-            localStorage.removeItem('ebc_insivumeh_history');
-            rawInsivumehData = [];
-            thingSpeakFeedsByDate = {};
-            thingSpeakRawFeeds = [];
-            combinedData = [];
+            try { localStorage.removeItem('ebc_insivumeh_history_v2'); localStorage.removeItem('ebc_insivumeh_history'); } catch (e) {}
             location.reload();
         }
     }
