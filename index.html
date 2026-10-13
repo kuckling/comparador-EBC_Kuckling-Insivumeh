@@ -227,14 +227,14 @@
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-tower-cell"></i> 1. Estación EBC & ID ThingSpeak</h3>
             <select id="stationSelect" onchange="onStationSelectChange()">
-                <option value="teocinte" selected>El Teocinte (1,242 m s.n.m.)</option>
-                <option value="coban">Cobán (1,306 m s.n.m.)</option>
+                <option value="coban" selected>Cobán (1,306 m s.n.m.)</option>
                 <option value="gualan">Gualán (155 m s.n.m.)</option>
+                <option value="teocinte">El Teocinte (1,242 m s.n.m.)</option>
             </select>
             <div style="margin-top: 8px;">
-                <input type="text" id="channelIdInput" value="3314007" placeholder="ID Canal ThingSpeak" oninput="onChannelInputDebounced()" onchange="onStationOrVariableChange()">
+                <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" oninput="onChannelInputDebounced()" onchange="onStationOrVariableChange()">
             </div>
-            <span class="altitude-badge" id="altitudeInfo">Altitud: 1,242 m s.n.m. | Factor ISA: 0.8613</span>
+            <span class="altitude-badge" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
         </div>
 
         <div class="card">
@@ -335,9 +335,9 @@
     let debounceTimer = null;
 
     const STATIONS_INFO = {
-        teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '3314007' },
         coban: { name: 'Cobán', altitude: 1306, factor: 0.8546, defaultChannel: '3246611' },
-        gualan: { name: 'Gualán', altitude: 155, factor: 0.9818, defaultChannel: '3225843' }
+        gualan: { name: 'Gualán', altitude: 155, factor: 0.9818, defaultChannel: '3225843' },
+        teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '3314007' }
     };
 
     const VARIABLE_UNITS = {
@@ -371,87 +371,103 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             onStationOrVariableChange();
-        }, 600);
+        }, 800);
     }
 
-    // Consulta robusta mediante JSONP para evitar bloqueos CORS en navegadores
-    function fetchThingSpeakData(channelId) {
-        return new Promise((resolve) => {
-            if (!channelId) {
-                setStatus('offline', 'Sin ID de Canal');
-                resolve({});
-                return;
+    function processFeedData(data) {
+        if (!data || !data.channel) return null;
+        thingSpeakRawFeeds = data.feeds || [];
+
+        const dailyGroups = {};
+        thingSpeakRawFeeds.forEach(feed => {
+            if (feed.created_at) {
+                const dateStr = feed.created_at.split('T')[0];
+                if (!dailyGroups[dateStr]) dailyGroups[dateStr] = { temp: [], hum: [], pres: [], lluvia: [] };
+
+                if (feed.field1 !== null && feed.field1 !== undefined && !isNaN(parseFloat(feed.field1))) dailyGroups[dateStr].temp.push(parseFloat(feed.field1));
+                if (feed.field2 !== null && feed.field2 !== undefined && !isNaN(parseFloat(feed.field2))) dailyGroups[dateStr].hum.push(parseFloat(feed.field2));
+                if (feed.field3 !== null && feed.field3 !== undefined && !isNaN(parseFloat(feed.field3))) dailyGroups[dateStr].pres.push(parseFloat(feed.field3));
+                if (feed.field4 !== null && feed.field4 !== undefined && !isNaN(parseFloat(feed.field4))) dailyGroups[dateStr].lluvia.push(parseFloat(feed.field4));
             }
+        });
 
-            setStatus('loading', `Conectando a Canal #${channelId}...`);
+        const feedsByDate = {};
+        Object.keys(dailyGroups).forEach(date => {
+            const g = dailyGroups[date];
+            const avg = arr => arr.length > 0 ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
 
-            const callbackName = 'ts_callback_' + Math.floor(Math.random() * 1000000);
+            feedsByDate[date] = {
+                tempMedia: avg(g.temp),
+                tempMax: g.temp.length > 0 ? Math.max(...g.temp) : null,
+                tempMin: g.temp.length > 0 ? Math.min(...g.temp) : null,
+                humedad: avg(g.hum),
+                presion: avg(g.pres),
+                lluvia: g.lluvia.length > 0 ? g.lluvia.reduce((a,b) => a+b, 0) : null
+            };
+        });
+
+        return feedsByDate;
+    }
+
+    async function fetchThingSpeakData(channelId) {
+        if (!channelId) {
+            setStatus('offline', 'Sin ID de Canal');
+            return {};
+        }
+
+        setStatus('loading', `Conectando a Canal #${channelId}...`);
+
+        // Intento 1: Fetch estándar HTTP/HTTPS
+        try {
+            const response = await fetch(`https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800`);
+            if (response.ok) {
+                const data = await response.json();
+                const res = processFeedData(data);
+                if (res) {
+                    setStatus('online', `Conectado: ${data.channel.name || 'Canal #' + channelId}`);
+                    return res;
+                }
+            }
+        } catch (e) {
+            console.warn("Intento fetch directo omitido, usando adaptador JSONP...", e);
+        }
+
+        // Intento 2: JSONP Fallback con manejo estricto de timeout
+        return new Promise((resolve) => {
+            const cbName = 'ts_cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
             const script = document.createElement('script');
-            
-            // Timeout de seguridad de 5 segundos
-            const timeoutId = setTimeout(() => {
-                delete window[callbackName];
-                if (script.parentNode) script.parentNode.removeChild(script);
+
+            const timer = setTimeout(() => {
+                cleanup();
                 setStatus('offline', `Canal #${channelId} No Responde / Privado`);
                 resolve({});
-            }, 5000);
+            }, 6000);
 
-            window[callbackName] = function(data) {
-                clearTimeout(timeoutId);
+            function cleanup() {
+                clearTimeout(timer);
                 if (script.parentNode) script.parentNode.removeChild(script);
-                delete window[callbackName];
+                delete window[cbName];
+            }
 
-                if (!data || !data.channel) {
-                    setStatus('offline', `Canal #${channelId} Privado / Inválido`);
+            window[cbName] = function(data) {
+                cleanup();
+                const res = processFeedData(data);
+                if (res) {
+                    setStatus('online', `Conectado: ${data.channel.name || 'Canal #' + channelId}`);
+                    resolve(res);
+                } else {
+                    setStatus('offline', `Canal #${channelId} Privado o Sin Datos`);
                     resolve({});
-                    return;
                 }
-
-                const chName = data.channel.name || `Canal #${channelId}`;
-                setStatus('online', `Conectado: ${chName}`);
-
-                thingSpeakRawFeeds = data.feeds || [];
-
-                const dailyGroups = {};
-                thingSpeakRawFeeds.forEach(feed => {
-                    if (feed.created_at) {
-                        const dateStr = feed.created_at.split('T')[0];
-                        if (!dailyGroups[dateStr]) dailyGroups[dateStr] = { temp: [], hum: [], pres: [], lluvia: [] };
-
-                        if (feed.field1 !== null && feed.field1 !== undefined && !isNaN(parseFloat(feed.field1))) dailyGroups[dateStr].temp.push(parseFloat(feed.field1));
-                        if (feed.field2 !== null && feed.field2 !== undefined && !isNaN(parseFloat(feed.field2))) dailyGroups[dateStr].hum.push(parseFloat(feed.field2));
-                        if (feed.field3 !== null && feed.field3 !== undefined && !isNaN(parseFloat(feed.field3))) dailyGroups[dateStr].pres.push(parseFloat(feed.field3));
-                        if (feed.field4 !== null && feed.field4 !== undefined && !isNaN(parseFloat(feed.field4))) dailyGroups[dateStr].lluvia.push(parseFloat(feed.field4));
-                    }
-                });
-
-                const feedsByDate = {};
-                Object.keys(dailyGroups).forEach(date => {
-                    const g = dailyGroups[date];
-                    const avg = arr => arr.length > 0 ? (arr.reduce((a,b) => a+b, 0) / arr.length) : null;
-
-                    feedsByDate[date] = {
-                        tempMedia: avg(g.temp),
-                        tempMax: g.temp.length > 0 ? Math.max(...g.temp) : null,
-                        tempMin: g.temp.length > 0 ? Math.min(...g.temp) : null,
-                        humedad: avg(g.hum),
-                        presion: avg(g.pres),
-                        lluvia: g.lluvia.length > 0 ? g.lluvia.reduce((a,b) => a+b, 0) : null
-                    };
-                });
-
-                resolve(feedsByDate);
             };
 
-            script.src = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800&callback=${callbackName}`;
             script.onerror = function() {
-                clearTimeout(timeoutId);
-                if (script.parentNode) script.parentNode.removeChild(script);
-                delete window[callbackName];
+                cleanup();
                 setStatus('offline', `Error al Conectar Canal #${channelId}`);
                 resolve({});
             };
 
+            script.src = `https://api.thingspeak.com/channels/${channelId}/feeds.json?results=800&callback=${cbName}`;
             document.head.appendChild(script);
         });
     }
@@ -688,32 +704,4 @@
 
     function exportToCSV() {
         if (combinedData.length === 0) return alert('No hay datos para exportar.');
-        let csvContent = "data:text/csv;charset=utf-8,Fecha,INSIVUMEH_Oficial,Red_EBC_ThingSpeak,Delta,Error_Relativo_Pct\n";
-        combinedData.forEach(d => {
-            csvContent += `${d.fecha},${d.insivumeh},${d.ebc},${d.delta},${d.errRel}\n`;
-        });
-        triggerDownload(csvContent, '03_Comparativa_Procesada_RedEBC_vs_INSIVUMEH.csv');
-    }
-
-    function triggerDownload(content, filename) {
-        const encodedUri = encodeURI(content);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", filename);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function clearStoredData() {
-        if (confirm('¿Desea borrar todos los datos guardados en el navegador?')) {
-            localStorage.removeItem('ebc_insivumeh_history');
-            rawInsivumehData = [];
-            combinedData = [];
-            location.reload();
-        }
-    }
-</script>
-
-</body>
-</html>
+        let csvContent
