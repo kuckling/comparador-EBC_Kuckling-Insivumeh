@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RED EBC KUCKLING - Validador Climatológico vs INSIVUMEH</title>
-    <!-- Chart.js and FontAwesome -->
+    <!-- Chart.js y FontAwesome -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -18,6 +18,7 @@
             --accent-orange: #fb923c;
             --accent-green: #4ade80;
             --accent-purple: #c084fc;
+            --accent-red: #f87171;
         }
 
         body {
@@ -42,6 +43,8 @@
             border-radius: 12px;
             border: 1px solid var(--border-color);
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .logo-title {
@@ -59,7 +62,6 @@
             font-size: 20px;
             margin: 0;
             font-weight: 700;
-            letter-spacing: 0.5px;
         }
 
         .logo-title p {
@@ -72,6 +74,7 @@
             display: flex;
             gap: 12px;
             align-items: center;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -81,7 +84,7 @@
             padding: 8px 16px;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -91,11 +94,15 @@
 
         .btn:hover {
             filter: brightness(1.1);
-            transform: translateY(-1px);
         }
 
         .btn-green {
             background: var(--accent-green);
+        }
+
+        .btn-purple {
+            background: var(--accent-purple);
+            color: #0f172a;
         }
 
         .btn-outline {
@@ -104,8 +111,32 @@
             color: var(--text-primary);
         }
 
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.05);
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status-online {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+
+        .status-offline {
+            background: rgba(248, 113, 113, 0.15);
+            color: var(--accent-red);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+        }
+
+        .status-loading {
+            background: rgba(251, 146, 60, 0.15);
+            color: var(--accent-orange);
+            border: 1px solid rgba(251, 146, 60, 0.3);
         }
 
         .grid-config {
@@ -141,6 +172,28 @@
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 14px;
+        }
+
+        .audit-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px dashed var(--accent-blue);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .audit-info {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .audit-info strong {
+            color: var(--accent-blue);
         }
 
         .metrics-grid {
@@ -204,18 +257,13 @@
         th {
             background: #0f172a;
             color: var(--text-secondary);
-            font-weight: 600;
         }
 
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
-            background: rgba(74, 222, 128, 0.1);
-            color: var(--accent-green);
+        .altitude-badge {
+            font-size: 11px;
+            color: var(--accent-blue);
+            margin-top: 6px;
+            display: block;
         }
     </style>
 </head>
@@ -231,37 +279,54 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn btn-green" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
-            <span class="status-badge"><i class="fa-solid fa-circle-dot"></i> ThingSpeak Conectado</span>
-            <button class="btn btn-outline" onclick="clearStoredData()"><i class="fa-solid fa-trash"></i> Limpiar Historial</button>
+            <span id="thingspeakStatus" class="status-badge status-offline"><i class="fa-solid fa-circle-xmark"></i> ThingSpeak Desconectado</span>
+            <button class="btn btn-green" onclick="exportToCSV()"><i class="fa-solid fa-file-excel"></i> Exportar Procesado</button>
+            <button class="btn btn-outline" onclick="clearStoredData()"><i class="fa-solid fa-trash"></i> Limpiar</button>
         </div>
     </header>
 
     <!-- Controles -->
     <div class="grid-config">
         <div class="card">
-            <h3 class="card-title"><i class="fa-solid fa-tower-cell"></i> 1. Seleccionar Estación EBC</h3>
-            <select id="stationSelect" onchange="cargarDatosCombinados()">
-                <option value="coban">Cobán (EBC - ThingSpeak)</option>
-                <option value="gualan">Gualán (EBC - ThingSpeak)</option>
-                <option value="teocinte">El Teocinte (EBC - ThingSpeak)</option>
+            <h3 class="card-title"><i class="fa-solid fa-tower-cell"></i> 1. Estación EBC & ID ThingSpeak</h3>
+            <select id="stationSelect" onchange="onStationOrVariableChange()">
+                <option value="coban" selected>Cobán (1,306 m s.n.m.)</option>
+                <option value="gualan">Gualán (155 m s.n.m.)</option>
+                <option value="teocinte">El Teocinte (1,242 m s.n.m.)</option>
             </select>
+            <div style="margin-top: 8px;">
+                <input type="text" id="channelIdInput" placeholder="ID Canal ThingSpeak (Ej: 9)" onchange="onStationOrVariableChange()">
+            </div>
+            <span class="altitude-badge" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
         </div>
 
         <div class="card">
-            <h3 class="card-title"><i class="fa-solid fa-file-csv"></i> 2. Cargar CSV INSIVUMEH</h3>
+            <h3 class="card-title"><i class="fa-solid fa-file-csv"></i> 2. Cargar CSV del INSIVUMEH</h3>
             <input type="file" id="csvFileInput" accept=".csv" onchange="handleCSVUpload(event)">
         </div>
 
         <div class="card">
             <h3 class="card-title"><i class="fa-solid fa-sliders"></i> 3. Variable a Analizar</h3>
-            <select id="variableSelect" onchange="actualizarVisualizacion()">
+            <select id="variableSelect" onchange="onStationOrVariableChange()">
                 <option value="tempMedia">Temperatura Media (°C)</option>
                 <option value="tempMax">Temperatura Máxima (°C)</option>
                 <option value="tempMin">Temperatura Mínima (°C)</option>
                 <option value="humedad">Humedad Relativa (%)</option>
+                <option value="presion">Presión Atmosférica (hPa)</option>
                 <option value="lluvia">Precipitación (mm)</option>
             </select>
+        </div>
+    </div>
+
+    <!-- Barra de Verificación de Datos Crudos para Demostraciones -->
+    <div class="audit-box">
+        <div class="audit-info">
+            <i class="fa-solid fa-shield-halved" style="color: var(--accent-green);"></i> 
+            <strong>Módulo de Verificación Científica:</strong> Descargue los archivos fuentes originales para validar la autenticidad de los gráficos.
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="downloadRawINSIVUMEH()"><i class="fa-solid fa-download"></i> Crudo INSIVUMEH (.csv)</button>
+            <button class="btn btn-purple" onclick="downloadRawThingSpeak()"><i class="fa-solid fa-database"></i> Crudo ThingSpeak API (.csv)</button>
         </div>
     </div>
 
@@ -288,7 +353,7 @@
     <!-- Gráficas -->
     <div class="charts-grid">
         <div class="card">
-            <h3 class="card-title"><i class="fa-solid fa-chart-line"></i> Serie Temporal Comparativa (Datos Reales)</h3>
+            <h3 class="card-title"><i class="fa-solid fa-chart-line"></i> Serie Temporal Comparativa (<span id="unitLabel">°C</span>)</h3>
             <div class="chart-container">
                 <canvas id="timeSeriesChart"></canvas>
             </div>
@@ -303,14 +368,14 @@
 
     <!-- Tabla -->
     <div class="card">
-        <h3 class="card-title"><i class="fa-solid fa-table"></i> Registros Cruzados Guardados (<span id="countRecords">0</span> días en memoria)</h3>
+        <h3 class="card-title"><i class="fa-solid fa-table"></i> Registros Cruzados (<span id="countRecords">0</span> días en memoria)</h3>
         <div style="overflow-x: auto; max-height: 300px;">
             <table>
                 <thead>
                     <tr>
                         <th>Fecha</th>
                         <th>INSIVUMEH (Oficial)</th>
-                        <th>Red EBC (IoT)</th>
+                        <th>Red EBC (ThingSpeak IoT)</th>
                         <th>Diferencia (Delta)</th>
                         <th>Error Relativo (%)</th>
                     </tr>
@@ -325,246 +390,31 @@
 
 <script>
     let rawInsivumehData = [];
+    let thingSpeakRawFeeds = [];
+    let thingSpeakFeeds = {};
     let combinedData = [];
     let lineChartInstance = null;
     let scatterChartInstance = null;
 
-    // Al cargar la página, recuperar datos previamente guardados si existen
+    const STATIONS_INFO = {
+        coban: { name: 'Cobán', altitude: 1306, factor: 0.8546, defaultChannel: '9' },
+        gualan: { name: 'Gualán', altitude: 155, factor: 0.9818, defaultChannel: '9' },
+        teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '9' }
+    };
+
+    const VARIABLE_UNITS = {
+        tempMedia: '°C',
+        tempMax: '°C',
+        tempMin: '°C',
+        humedad: '%',
+        presion: 'hPa',
+        lluvia: 'mm'
+    };
+
     window.onload = function() {
+        const stationKey = document.getElementById('stationSelect').value;
+        document.getElementById('channelIdInput').value = STATIONS_INFO[stationKey].defaultChannel;
+
         const stored = localStorage.getItem('ebc_insivumeh_history');
         if (stored) {
             try {
-                rawInsivumehData = JSON.parse(stored);
-                actualizarVisualizacion();
-            } catch(e) { console.error(e); }
-        }
-    };
-
-    function handleCSVUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const text = e.target.result;
-            parseInsivumehCSV(text);
-        };
-        reader.readAsText(file);
-    }
-
-    function parseInsivumehCSV(csvText) {
-        const lines = csvText.trim().split('\n');
-        if (lines.length < 2) return;
-
-        const headers = lines[0].split(',').map(h => h.trim());
-        const parsed = [];
-
-        for (let i = 1; i < lines.length; i++) {
-            if (!lines[i].trim()) continue;
-            const cols = lines[i].split(',').map(c => c.trim());
-            
-            const fecha = cols[0];
-            const lluvia = parseFloat(cols[1]) || 0;
-            const tempMax = parseFloat(cols[2]) || 0;
-            const tempMin = parseFloat(cols[3]) || 0;
-            const tempMedia = parseFloat(cols[4]) || 0;
-            const humedad = parseFloat(cols[6]) || 0;
-
-            if (fecha && !isNaN(tempMedia)) {
-                parsed.push({ fecha, lluvia, tempMax, tempMin, tempMedia, humedad });
-            }
-        }
-
-        // Unir nuevos registros con los guardados (Evitando duplicados de fecha)
-        const map = new Map();
-        rawInsivumehData.forEach(item => map.set(item.fecha, item));
-        parsed.forEach(item => map.set(item.fecha, item));
-
-        rawInsivumehData = Array.from(map.values()).sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
-
-        // Guardar en localStorage para acumular hasta 12 meses
-        localStorage.setItem('ebc_insivumeh_history', JSON.stringify(rawInsivumehData));
-
-        actualizarVisualizacion();
-    }
-
-    function actualizarVisualizacion() {
-        if (rawInsivumehData.length === 0) return;
-
-        const selectedVar = document.getElementById('variableSelect').value;
-        document.getElementById('countRecords').innerText = rawInsivumehData.length;
-
-        // Generar datos correspondientes para la estación local basándose en las fechas reales del CSV
-        combinedData = rawInsivumehData.map(item => {
-            const insVal = item[selectedVar] || 0;
-            // Variación realista de lectura de sensor IoT alrededor de la referencia oficial
-            const offset = (Math.sin(new Date(item.fecha).getDate()) * 0.8) + 0.3;
-            const localVal = parseFloat((insVal + offset).toFixed(1));
-            const delta = parseFloat((localVal - insVal).toFixed(2));
-            const errRel = insVal !== 0 ? parseFloat(((delta / insVal) * 100).toFixed(2)) : 0;
-
-            return {
-                fecha: item.fecha,
-                insivumeh: insVal,
-                ebc: localVal,
-                delta: delta,
-                errRel: errRel
-            };
-        });
-
-        calcularMetricas(combinedData);
-        renderCharts(combinedData);
-        renderTable(combinedData);
-    }
-
-    function calcularMetricas(data) {
-        const n = data.length;
-        if (n === 0) return;
-
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0, sumDiff2 = 0, sumDiff = 0;
-
-        data.forEach(d => {
-            const x = d.insivumeh;
-            const y = d.ebc;
-            sumX += x;
-            sumY += y;
-            sumXY += (x * y);
-            sumX2 += (x * x);
-            sumY2 += (y * y);
-            sumDiff2 += Math.pow(y - x, 2);
-            sumDiff += (y - x);
-        });
-
-        const numR = (n * sumXY) - (sumX * sumY);
-        const denR = Math.sqrt(((n * sumX2) - Math.pow(sumX, 2)) * ((n * sumY2) - Math.pow(sumY, 2)));
-        const r = denR !== 0 ? (numR / denR) : 0;
-        const r2 = Math.pow(r, 2);
-        const rmse = Math.sqrt(sumDiff2 / n);
-        const bias = sumDiff / n;
-
-        document.getElementById('metricR').innerText = r.toFixed(3);
-        document.getElementById('metricR2').innerText = r2.toFixed(3);
-        document.getElementById('metricRMSE').innerText = rmse.toFixed(2);
-        document.getElementById('metricBias').innerText = (bias > 0 ? '+' : '') + bias.toFixed(2);
-    }
-
-    function renderCharts(data) {
-        const labels = data.map(d => d.fecha);
-        const insVals = data.map(d => d.insivumeh);
-        const ebcVals = data.map(d => d.ebc);
-
-        // 1. Line Chart
-        const ctxLine = document.getElementById('timeSeriesChart').getContext('2d');
-        if (lineChartInstance) lineChartInstance.destroy();
-
-        lineChartInstance = new Chart(ctxLine, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'INSIVUMEH (Oficial)',
-                        data: insVals,
-                        borderColor: '#fb923c',
-                        backgroundColor: 'rgba(251, 146, 60, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.2
-                    },
-                    {
-                        label: 'Estación Red EBC (IoT)',
-                        data: ebcVals,
-                        borderColor: '#38bdf8',
-                        backgroundColor: 'rgba(56, 189, 248, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#f8fafc' } } },
-                scales: {
-                    x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                    y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
-                }
-            }
-        });
-
-        // 2. Scatter Chart
-        const ctxScatter = document.getElementById('scatterChart').getContext('2d');
-        if (scatterChartInstance) scatterChartInstance.destroy();
-
-        const scatterData = data.map(d => ({ x: d.insivumeh, y: d.ebc }));
-
-        scatterChartInstance = new Chart(ctxScatter, {
-            type: 'scatter',
-            data: {
-                datasets: [{
-                    label: 'Lecturas Pareadas',
-                    data: scatterData,
-                    backgroundColor: '#c084fc'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#f8fafc' } } },
-                scales: {
-                    x: { title: { display: true, text: 'INSIVUMEH', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
-                    y: { title: { display: true, text: 'Red EBC', color: '#94a3b8' }, ticks: { color: '#94a3b8' }, grid: { color: '#334155' } }
-                }
-            }
-        });
-    }
-
-    function renderTable(data) {
-        const tbody = document.getElementById('tableBody');
-        tbody.innerHTML = '';
-
-        data.forEach(d => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${d.fecha}</strong></td>
-                <td>${d.insivumeh}</td>
-                <td>${d.ebc}</td>
-                <td style="color: ${d.delta >= 0 ? '#fb923c' : '#38bdf8'}; font-weight: bold;">${d.delta > 0 ? '+' : ''}${d.delta}</td>
-                <td>${d.errRel}%</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function exportToCSV() {
-        if (combinedData.length === 0) return alert('No hay datos para exportar.');
-
-        let csvContent = "data:text/csv;charset=utf-8,Fecha,INSIVUMEH_Oficial,Red_EBC_IoT,Delta,Error_Relativo_Pct\n";
-        combinedData.forEach(d => {
-            csvContent += `${d.fecha},${d.insivumeh},${d.ebc},${d.delta},${d.errRel}\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `Comparativa_RedEBC_vs_INSIVUMEH.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-
-    function clearStoredData() {
-        if (confirm('¿Desea borrar todo el historial guardado de mediciones?')) {
-            localStorage.removeItem('ebc_insivumeh_history');
-            rawInsivumehData = [];
-            combinedData = [];
-            location.reload();
-        }
-    }
-
-    function cargarDatosCombinados() {
-        actualizarVisualizacion();
-    }
-</script>
-
-</body>
-</html>
