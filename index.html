@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RED EBC KUCKLING - Validador Climatológico vs INSIVUMEH</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -85,12 +85,47 @@
                 <option value="coban" selected>Cobán (1,306 m s.n.m.)</option>
                 <option value="gualan">Gualán (155 m s.n.m.)</option>
                 <option value="teocinte">El Teocinte (1,242 m s.n.m.)</option>
+                <option value="otra">Otra estación (cualquiera)</option>
             </select>
             <div style="margin-top: 8px;">
                 <input type="text" id="channelIdInput" value="3246611" placeholder="ID Canal ThingSpeak" oninput="onChannelInputDebounced()">
             </div>
             <div style="margin-top: 8px;">
                 <input type="password" id="apiKeyInput" placeholder="Read API Key (solo si el canal es privado)" oninput="onChannelInputDebounced()">
+            </div>
+            <div style="margin-top: 8px;">
+                <label for="altitudeInput" style="font-size:12px; color: var(--text-secondary);">Altitud de la estación (m s.n.m.) — se usa para convertir la presión a nivel de estación</label>
+                <input type="text" id="altitudeInput" value="1306" inputmode="decimal" placeholder="Altitud en metros" oninput="onAltitudeInput()">
+            </div>
+            <div style="margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 10px;">
+                <div style="font-size:12px; color: var(--text-secondary); margin-bottom: 6px;"><i class="fa-solid fa-table-columns"></i> Mapeo de campos — se detecta solo por el nombre del campo; corrígelo si hace falta</div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                    <div>
+                        <label for="mapTemp" style="font-size:12px; color: var(--text-secondary);">Temperatura</label>
+                        <select id="mapTemp" onchange="onMapChange()">
+                            <option value="">Ninguno</option>
+                            <option value="field1">Campo 1</option><option value="field2">Campo 2</option><option value="field3">Campo 3</option><option value="field4">Campo 4</option>
+                            <option value="field5">Campo 5</option><option value="field6">Campo 6</option><option value="field7">Campo 7</option><option value="field8">Campo 8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mapHum" style="font-size:12px; color: var(--text-secondary);">Humedad</label>
+                        <select id="mapHum" onchange="onMapChange()">
+                            <option value="">Ninguno</option>
+                            <option value="field1">Campo 1</option><option value="field2">Campo 2</option><option value="field3">Campo 3</option><option value="field4">Campo 4</option>
+                            <option value="field5">Campo 5</option><option value="field6">Campo 6</option><option value="field7">Campo 7</option><option value="field8">Campo 8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="mapPres" style="font-size:12px; color: var(--text-secondary);">Presión</label>
+                        <select id="mapPres" onchange="onMapChange()">
+                            <option value="">Ninguno</option>
+                            <option value="field1">Campo 1</option><option value="field2">Campo 2</option><option value="field3">Campo 3</option><option value="field4">Campo 4</option>
+                            <option value="field5">Campo 5</option><option value="field6">Campo 6</option><option value="field7">Campo 7</option><option value="field8">Campo 8</option>
+                        </select>
+                    </div>
+                </div>
+                <span class="small-info" id="mapUnits">Unidades detectadas: —</span>
             </div>
             <span class="small-info" id="altitudeInfo">Altitud: 1,306 m s.n.m. | Factor ISA: 0.8546</span>
         </div>
@@ -99,6 +134,7 @@
             <h3 class="card-title"><i class="fa-solid fa-file-csv"></i> 2. Cargar CSV del INSIVUMEH</h3>
             <input type="file" id="csvFileInput" accept=".csv,.txt" onchange="handleCSVUpload(event)">
             <span class="small-info" id="csvInfo">Sin archivo cargado.</span>
+            <span class="small-info">Para comparar otra estación, sube aquí el CSV del INSIVUMEH de esa localidad (cualquier estación oficial sirve; las columnas se detectan solas). Sin datos oficiales de esa localidad no hay con qué comparar.</span>
         </div>
 
         <div class="card">
@@ -133,6 +169,7 @@
             <strong>Módulo de Verificación Científica:</strong> Descargue los archivos fuente originales para validar la autenticidad de los gráficos.
         </div>
         <div style="display: flex; gap: 10px;">
+            <button class="btn" onclick="downloadReport()"><i class="fa-solid fa-file-lines"></i> Informe de validación (.html)</button>
             <button class="btn btn-outline" onclick="downloadRawINSIVUMEH()"><i class="fa-solid fa-download"></i> Crudo INSIVUMEH (.csv)</button>
             <button class="btn btn-purple" onclick="downloadRawThingSpeak()"><i class="fa-solid fa-database"></i> Crudo ThingSpeak API (.csv)</button>
         </div>
@@ -204,8 +241,100 @@
     const STATIONS_INFO = {
         coban:    { name: 'Cobán',       altitude: 1306, factor: 0.8546, defaultChannel: '3246611' },
         gualan:   { name: 'Gualán',      altitude: 155,  factor: 0.9818, defaultChannel: '3225843' },
-        teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '3314007' }
+        teocinte: { name: 'El Teocinte', altitude: 1242, factor: 0.8613, defaultChannel: '3314007' },
+        otra:     { name: 'Otra estación', altitude: 0, factor: null, defaultChannel: '' }
     };
+
+    // --- Mapeo de campos: cualquier estación pública de ThingSpeak ---
+    // Cada estación usa los campos como quiere (temperatura en el 1, en el 3, en °F,
+    // presión en hPa, inHg o mmHg...). El tablero lee el NOMBRE de cada campo del
+    // canal y deduce qué es cada uno; si se equivoca, el usuario lo corrige arriba.
+    let fieldMap = { temp: 'field1', hum: 'field2', pres: 'field3' };
+    let fieldUnits = { temp: 'C', pres: 'hPa' };
+
+    function detectMapping(meta) {
+        const labels = {};
+        for (let i = 1; i <= 8; i++) labels['field' + i] = (meta['field' + i] || '').toLowerCase();
+        function find(keys, exclude) {
+            for (let i = 1; i <= 8; i++) {
+                const key = 'field' + i;
+                if (exclude && exclude.indexOf(key) !== -1) continue;
+                if (keys.some(function (k) { return labels[key].indexOf(k) !== -1; })) return key;
+            }
+            return '';
+        }
+        const temp = find(['temp']);
+        const hum = find(['hum'], [temp]);
+        const pres = find(['pres'], [temp, hum]);
+        const units = { temp: 'C', pres: 'hPa' };
+        if (temp && (labels[temp].indexOf('°f') !== -1 || labels[temp].indexOf('fahrenheit') !== -1 || /\(f\)|\bf\b/.test(labels[temp]))) units.temp = 'F';
+        if (pres && (labels[pres].indexOf('inhg') !== -1 || labels[pres].indexOf('in hg') !== -1)) units.pres = 'inHg';
+        else if (pres && (labels[pres].indexOf('mmhg') !== -1 || labels[pres].indexOf('mm hg') !== -1)) units.pres = 'mmHg';
+        return { map: { temp: temp, hum: hum, pres: pres }, units: units };
+    }
+
+    // Normaliza una lectura cruda a {temp °C, hum %, pres hPa} según el mapeo.
+    // Valores imposibles (sensor averiado, p. ej. -130 °C) se devuelven como null:
+    // no deben contaminar medias, máximos ni la comparación.
+    function normalizeFeedValues(feed) {
+        let temp = fieldMap.temp ? parseFloat(feed[fieldMap.temp]) : NaN;
+        if (fieldUnits.temp === 'F' && isFinite(temp)) temp = (temp - 32) * 5 / 9;
+        let hum = fieldMap.hum ? parseFloat(feed[fieldMap.hum]) : NaN;
+        let pres = fieldMap.pres ? parseFloat(feed[fieldMap.pres]) : NaN;
+        if (fieldUnits.pres === 'inHg' && isFinite(pres)) pres = pres * 33.8639;
+        if (fieldUnits.pres === 'mmHg' && isFinite(pres)) pres = pres * 1.33322;
+        if (!isFinite(temp) || temp < -50 || temp > 60) temp = null;
+        if (!isFinite(hum) || hum < 0 || hum > 100) hum = null;
+        if (!isFinite(pres) || pres < 300 || pres > 1100) pres = null;
+        return { temp: temp, hum: hum, pres: pres };
+    }
+
+    function renderMapUI() {
+        document.getElementById('mapTemp').value = fieldMap.temp || '';
+        document.getElementById('mapHum').value = fieldMap.hum || '';
+        document.getElementById('mapPres').value = fieldMap.pres || '';
+        const tempUnit = fieldUnits.temp === 'F' ? '°F (convertida a °C)' : '°C';
+        const presUnit = fieldUnits.pres === 'hPa' ? 'hPa' : fieldUnits.pres + ' (convertida a hPa)';
+        document.getElementById('mapUnits').innerHTML = 'Unidades detectadas: temperatura ' + tempUnit + ' · presión ' + presUnit;
+    }
+
+    function onMapChange() {
+        fieldMap = {
+            temp: document.getElementById('mapTemp').value,
+            hum: document.getElementById('mapHum').value,
+            pres: document.getElementById('mapPres').value
+        };
+        renderMapUI();
+        // Re-agregar desde los datos ya descargados: no hace falta volver a bajar.
+        const altitude = getAltitude();
+        if (thingSpeakRawFeeds.length) thingSpeakFeedsByDate = aggregateByLocalDate(thingSpeakRawFeeds, altitude);
+        actualizarVisualizacion();
+    }
+
+    // Altitud efectiva: la del campo editable (que se rellena al elegir estación).
+    function getAltitude() {
+        const h = parseFloat(document.getElementById('altitudeInput').value);
+        return isFinite(h) ? h : null;
+    }
+
+    // Factor ISA presión de estación / presión a nivel del mar.
+    // Para las estaciones conocidas se usa el factor guardado; para "otra" se
+    // calcula desde la altitud que escribió el usuario.
+    function pressureFactor(station) {
+        if (station.factor) return station.factor;
+        const h = getAltitude();
+        if (h === null) return 1;
+        return Math.pow(1 - (0.0065 * h) / 288.15, 5.257);
+    }
+
+    function onAltitudeInput() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () {
+            const altitude = getAltitude();
+            if (thingSpeakRawFeeds.length && altitude !== null) thingSpeakFeedsByDate = aggregateByLocalDate(thingSpeakRawFeeds, altitude);
+            actualizarVisualizacion();
+        }, 700);
+    }
 
     const VARIABLE_UNITS = { tempMedia: '°C', tempMax: '°C', tempMin: '°C', humedad: '%', presion: 'hPa', lluvia: 'mm' };
     const VARIABLE_NAMES = { tempMedia: 'Temp. media', tempMax: 'Temp. máxima', tempMin: 'Temp. mínima', humedad: 'Humedad', presion: 'Presión', lluvia: 'Lluvia' };
@@ -264,12 +393,21 @@
 
     // ---------- Eventos de UI ----------
     function onStationSelectChange() {
-        const station = STATIONS_INFO[document.getElementById('stationSelect').value];
-        document.getElementById('channelIdInput').value = station.defaultChannel;
+        const sel = document.getElementById('stationSelect').value;
+        const station = STATIONS_INFO[sel];
+        if (sel !== 'otra') {
+            document.getElementById('channelIdInput').value = station.defaultChannel;
+            document.getElementById('altitudeInput').value = station.altitude;
+        }
         onStationOrVariableChange();
     }
 
     function onChannelInputDebounced() {
+        // Escribir el canal a mano cambia la estación a "Otra" (la altitud se queda como está).
+        const sel = document.getElementById('stationSelect').value;
+        if (sel !== 'otra' && document.getElementById('channelIdInput').value.trim() !== STATIONS_INFO[sel].defaultChannel) {
+            document.getElementById('stationSelect').value = 'otra';
+        }
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(onStationOrVariableChange, 700);
     }
@@ -316,15 +454,16 @@
             const date = toLocalDate(feed.created_at);
             if (!date) return;
             if (!groups[date]) groups[date] = { temp: [], hum: [], pres: [], presEst: [] };
-            const push = (arr, v) => { const n = parseFloat(v); if (v !== null && v !== undefined && v !== '' && !isNaN(n)) arr.push(n); };
-            push(groups[date].temp, feed.field1);
-            push(groups[date].hum, feed.field2);
-            push(groups[date].pres, feed.field3);
-            // Campos del firmware: field1 T, field2 HR, field3 presión MSL, field4 PUNTO DE ROCÍO, field5 prob. lluvia, field6 LCL.
-            // La EBC aún no envía lluvia acumulada, por eso ya no se usa field4 como lluvia.
-            const Tc = parseFloat(feed.field1), Pm = parseFloat(feed.field3);
-            if (!isNaN(Pm)) {
-                const Tk = (isNaN(Tc) ? 15 : Tc) + 273.15;
+            const push = (arr, v) => { if (v !== null && v !== undefined && !isNaN(v)) arr.push(v); };
+            // Los campos se leen según el mapeo detectado (no siempre field1/2/3),
+            // con conversión de unidades y descarte de valores imposibles.
+            const nv = normalizeFeedValues(feed);
+            push(groups[date].temp, nv.temp);
+            push(groups[date].hum, nv.hum);
+            push(groups[date].pres, nv.pres);
+            const Tc = nv.temp, Pm = nv.pres;
+            if (Pm !== null && altitude !== null) {
+                const Tk = (Tc === null ? 15 : Tc) + 273.15;
                 // Inversión exacta de la fórmula del firmware: Pmsl = P * (1 - 0.0065*h/(T+273.15))^(-5.257)
                 groups[date].presEst.push(Pm * Math.pow(1 - (0.0065 * altitude) / Tk, 5.257));
             }
@@ -352,7 +491,10 @@
         const station = STATIONS_INFO[document.getElementById('stationSelect').value];
         const channelId = document.getElementById('channelIdInput').value.trim();
         const apiKey = document.getElementById('apiKeyInput').value.trim();
-        document.getElementById('altitudeInfo').innerHTML = `Altitud: ${station.altitude.toLocaleString()} m s.n.m. | Presión: se convierte lectura por lectura con la T de la EBC`;
+        const altitude = getAltitude();
+        document.getElementById('altitudeInfo').innerHTML = altitude === null
+            ? 'Altitud: sin definir — escriba la altitud de la estación para comparar la presión'
+            : `Altitud: ${altitude.toLocaleString()} m s.n.m. | Factor ISA: ${pressureFactor(station).toFixed(4)} | Presión: se convierte lectura por lectura con la T de la EBC`;
 
         const token = ++fetchToken;
         thingSpeakRawFeeds = [];
@@ -365,20 +507,28 @@
         }
 
         try {
+            // Sonda barata (1 lectura) para leer el NOMBRE de los campos del canal
+            // y detectar el mapeo antes de descargar el rango completo.
+            const probe = await fetch(buildUrl(channelId, apiKey, { results: 1 }));
+            if (!probe.ok) throw new Error('Canal no encontrado o privado');
+            const probeData = await probe.json();
+            if (token !== fetchToken) return;
+            if (probeData.channel) {
+                const detected = detectMapping(probeData.channel);
+                fieldMap = detected.map;
+                fieldUnits = detected.units;
+                renderMapUI();
+            }
             if (rawInsivumehData.length === 0) {
                 // Sin CSV: solo probamos la conexión
-                setStatus('loading', `Conectando a Canal #${channelId}...`);
-                const r = await fetch(buildUrl(channelId, apiKey, { results: 1 }));
-                if (!r.ok) throw new Error('Canal no encontrado o privado');
-                const data = await r.json();
-                if (token !== fetchToken) return;
-                setStatus('online', `Conectado: ${(data.channel && data.channel.name) || 'Canal #' + channelId}`);
+                setStatus('online', `Conectado: ${(probeData.channel && probeData.channel.name) || 'Canal #' + channelId}`);
             } else {
+                if (altitude === null) showWarn('Falta la altitud de la estación: la presión a nivel de estación no se puede calcular. Escríbala arriba, o cambie el modo de presión a «usar field3 tal cual».');
                 const fechas = rawInsivumehData.map(d => d.fecha).sort();
                 const res = await fetchThingSpeakRange(channelId, apiKey, fechas[0], fechas[fechas.length - 1], token);
                 if (res === null || token !== fetchToken) return;
                 thingSpeakRawFeeds = res.feeds;
-                thingSpeakFeedsByDate = aggregateByLocalDate(res.feeds, station.altitude);
+                thingSpeakFeedsByDate = aggregateByLocalDate(res.feeds, altitude);
                 const dias = Object.keys(thingSpeakFeedsByDate).length;
                 setStatus('online', `Conectado: ${res.chName} — ${res.feeds.length} lecturas, ${dias} días`);
                 showWarn(res.truncated ? 'Alguna ventana de 2 días superó 8000 registros y pudo quedar truncada. Avíseme y la divido en ventanas más cortas.' : '');
@@ -491,10 +641,10 @@
     function ajustarPresion(raw, station) {
         const mode = document.getElementById('pressureMode').value;
         if (mode === 'station') return raw;
-        if (mode === 'sealevel') return raw * station.factor;
+        if (mode === 'sealevel') return raw * pressureFactor(station);
         // auto: ¿el valor está más cerca de la presión de estación esperada o de la de nivel del mar?
-        const stationP = SEA_LEVEL_HPA * station.factor;
-        return Math.abs(raw - stationP) <= Math.abs(raw - SEA_LEVEL_HPA) ? raw : raw * station.factor;
+        const stationP = SEA_LEVEL_HPA * pressureFactor(station);
+        return Math.abs(raw - stationP) <= Math.abs(raw - SEA_LEVEL_HPA) ? raw : raw * pressureFactor(station);
     }
 
     // La columna "Presion Atmosferica" del INSIVUMEH viene en mmHg (ej. 653.5 en Cobán = ~871 hPa)
@@ -504,28 +654,24 @@
         if (mode === 'hpa') return raw;
         if (mode === 'mmhg') return raw * MMHG_TO_HPA;
         // auto: elegir la unidad cuyo valor queda más cerca de la presión de estación esperada por altitud
-        const expected = SEA_LEVEL_HPA * station.factor;
+        const expected = SEA_LEVEL_HPA * pressureFactor(station);
         return Math.abs(raw * MMHG_TO_HPA - expected) < Math.abs(raw - expected) ? raw * MMHG_TO_HPA : raw;
     }
 
     // ---------- Cruce de datos ----------
-    function actualizarVisualizacion() {
-        if (rawInsivumehData.length === 0) return;
-
+    // Construye las parejas (INSIVUMEH, EBC) de una variable para todos los días del CSV.
+    // Es la MISMA lógica que alimenta la pantalla; el informe la reutiliza para todas
+    // las variables, así que si cambia aquí, cambia en los dos lados.
+    function buildPairsFor(varKey) {
         const station = STATIONS_INFO[document.getElementById('stationSelect').value];
-        const selectedVar = document.getElementById('variableSelect').value;
-        const unit = VARIABLE_UNITS[selectedVar];
-        document.getElementById('unitLabel').innerText = unit;
-        document.getElementById('countRecords').innerText = rawInsivumehData.length;
-
-        combinedData = rawInsivumehData.map(item => {
-            let insVal = item[selectedVar];
-            if (selectedVar === 'presion' && insVal !== null && insVal !== undefined) {
+        return rawInsivumehData.map(item => {
+            let insVal = item[varKey];
+            if (varKey === 'presion' && insVal !== null && insVal !== undefined) {
                 insVal = parseFloat(ajustarPresionINS(insVal, station).toFixed(2));
             }
             const feed = thingSpeakFeedsByDate[item.fecha];
-            let ebcVal = (feed && feed[selectedVar] !== null && feed[selectedVar] !== undefined) ? feed[selectedVar] : null;
-            if (selectedVar === 'presion') {
+            let ebcVal = (feed && feed[varKey] !== null && feed[varKey] !== undefined) ? feed[varKey] : null;
+            if (varKey === 'presion') {
                 ebcVal = !feed ? null : (document.getElementById('pressureMode').value === 'station' ? feed.presion : feed.presionEst);
                 if (ebcVal === undefined) ebcVal = null;
             }
@@ -543,6 +689,17 @@
                 nLecturas: feed ? feed.nLecturas : 0
             };
         });
+    }
+
+    function actualizarVisualizacion() {
+        if (rawInsivumehData.length === 0) return;
+
+        const selectedVar = document.getElementById('variableSelect').value;
+        const unit = VARIABLE_UNITS[selectedVar];
+        document.getElementById('unitLabel').innerText = unit;
+        document.getElementById('countRecords').innerText = rawInsivumehData.length;
+
+        combinedData = buildPairsFor(selectedVar);
 
         const matched = combinedData.filter(d => d.delta !== null).length;
         document.getElementById('countMatched').innerText = matched;
@@ -561,7 +718,7 @@
         if (n < 2) {
             ['metricR', 'metricR2', 'metricRMSE', 'metricMAE', 'metricBias'].forEach(id => set(id, '--'));
             document.getElementById('calibText').innerText = n === 0
-                ? 'No hay días en común con datos de la EBC. Revise el ID del canal, el rango de fechas del CSV y que los campos (field1..4) tengan datos.'
+                ? 'No hay días en común con datos de la estación. Revise el ID del canal, el rango de fechas del CSV y el mapeo de campos (Temperatura / Humedad / Presión).'
                 : 'Se necesitan al menos 2 días en común para calcular.';
             return;
         }
@@ -657,6 +814,223 @@
         });
     }
 
+    // ---------- Informe de validación ----------
+    // Umbrales de error típico (RMSE) por variable, en la unidad de cada una.
+    // Están anclados a lo que el propio sensor BME280 promete (±0.5 °C, ±3 % HR, ±1 hPa):
+    // un error dentro de eso es "excelente"; el doble, "bueno"; más, hay que revisar.
+    const RMSE_BANDS = {
+        tempMedia: { ex: 0.5, ok: 1.0, acc: 2.0 },
+        tempMax:   { ex: 0.5, ok: 1.0, acc: 2.0 },
+        tempMin:   { ex: 0.5, ok: 1.0, acc: 2.0 },
+        humedad:   { ex: 3, ok: 5, acc: 10 },
+        presion:   { ex: 2, ok: 3, acc: 5 }
+    };
+    const OFFSET_NAMES = { tempMedia: 'offT', tempMax: 'offT', tempMin: 'offT', humedad: 'offHum', presion: 'offP' };
+    const REPORT_VARS = ['tempMedia', 'tempMax', 'tempMin', 'humedad', 'presion', 'lluvia'];
+
+    // Estadística de una variable sin tocar la pantalla: la usa el informe.
+    function computeStatsFor(varKey) {
+        const pairs = buildPairsFor(varKey);
+        const withBoth = pairs.filter(d => d.delta !== null);
+        const n = withBoth.length, total = pairs.length;
+        const base = { varKey, name: VARIABLE_NAMES[varKey], unit: VARIABLE_UNITS[varKey], n, total, pairs, ok: false };
+        if (n < 2) return base;
+        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0, sumDiff2 = 0, sumDiff = 0, sumAbs = 0;
+        let minIns = Infinity, maxIns = -Infinity;
+        withBoth.forEach(d => {
+            const x = d.insivumeh, y = d.ebc;
+            sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x; sumY2 += y * y;
+            sumDiff2 += (y - x) ** 2; sumDiff += (y - x); sumAbs += Math.abs(y - x);
+            if (x < minIns) minIns = x;
+            if (x > maxIns) maxIns = x;
+        });
+        const denR = Math.sqrt((n * sumX2 - sumX ** 2) * (n * sumY2 - sumY ** 2));
+        const r = denR !== 0 ? (n * sumXY - sumX * sumY) / denR : 0;
+        const denA = n * sumY2 - sumY ** 2;
+        const a = denA !== 0 ? (n * sumXY - sumX * sumY) / denA : 1;
+        const b = (sumX - a * sumY) / n;
+        const lecturas = pairs.map(d => d.nLecturas || 0);
+        return Object.assign(base, {
+            ok: true, r, r2: r * r,
+            rmse: Math.sqrt(sumDiff2 / n), mae: sumAbs / n, bias: sumDiff / n,
+            a, b, minIns, maxIns,
+            missingDays: total - n,
+            missingDates: pairs.filter(d => d.delta === null).map(d => d.fecha),
+            avgLecturas: lecturas.reduce((x, y) => x + y, 0) / total,
+            minLecturas: Math.min.apply(null, lecturas)
+        });
+    }
+
+    // Veredicto en palabras simples para una variable.
+    function verdictFor(s) {
+        if (!s.ok) return { level: 'sin datos', text: s.varKey === 'lluvia'
+            ? 'La estación no mide lluvia todavía (no tiene pluviómetro), así que no hay nada que comparar.'
+            : 'No hay suficientes días en común con datos de la estación para evaluar esta variable.' };
+        if (s.n < 5) return { level: 'muestra pequeña', text: 'Con solo ' + s.n + ' días, estas cifras son orientativas: un solo día raro las mueve mucho. Para concluir hacen falta más días.' };
+        const band = RMSE_BANDS[s.varKey] || { ex: 0, ok: 0, acc: 0 };
+        if (s.r >= 0.9 && s.rmse <= band.ex) return { level: 'muy buena', text: 'La estación mide muy bien esta variable: sigue al valor oficial casi día a día y el error típico está dentro de lo que el propio sensor promete.' };
+        if (s.r >= 0.7 && s.rmse <= band.ok) return { level: 'buena', text: 'La estación mide bien, con un ajuste pendiente: sigue la tendencia y el error típico es moderado. La calibración de abajo lo deja mejor.' };
+        if (s.r >= 0.5 && s.rmse <= band.acc) return { level: 'aceptable', text: 'La estación capta la tendencia a grandes rasgos, pero el error es notable. Conviene aplicar la calibración y revisar los días con más error en la tabla.' };
+        return { level: 'débil', text: 'La estación no está midiendo bien esta variable en este periodo: la correlación es baja o el error es grande. Antes de usar estos datos, revise la estación (sensor, ubicación, escudo contra el sol) y la calibración.' };
+    }
+
+    // Frases en lenguaje común para cada número (variable ya calculada).
+    function interpretR(r) {
+        if (r >= 0.9) return 'Casi perfecto: cuando el valor oficial sube, el de la estación sube; cuando baja, baja. Las dos curvas se mueven juntas.';
+        if (r >= 0.7) return 'Bueno: las dos series siguen la misma tendencia la mayoría de los días, con algunas desviaciones.';
+        if (r >= 0.5) return 'Moderado: la tendencia general se sigue, pero varios días se desvían bastante.';
+        if (r >= 0) return 'Débil: las dos series no se mueven juntas de forma clara.';
+        return 'Negativo: las dos series se mueven incluso en sentido contrario. Algo está mal (sensor, mapeo de campos o datos).';
+    }
+    function interpretR2(r2) {
+        return 'El ' + Math.round(r2 * 100) + ' % de los cambios que registra el INSIVUMEH también los capta la estación. El ' + Math.round((1 - r2) * 100) + ' % restante es error o variación que la estación no explica.';
+    }
+    function interpretRMSE(s) {
+        return 'En un día típico, la estación se equivoca en unos ' + s.rmse.toFixed(2) + ' ' + s.unit + '. Es el error "típico", en la misma unidad que se mide. Los valores oficiales de este periodo van de ' + s.minIns + ' a ' + s.maxIns + ' ' + s.unit + '.';
+    }
+    function interpretMAE(s) {
+        return 'En promedio, la diferencia entre la estación y el valor oficial es de ' + s.mae.toFixed(2) + ' ' + s.unit + ', sin importar si es para arriba o para abajo.';
+    }
+    function interpretBias(s) {
+        const dir = s.bias >= 0 ? 'por encima' : 'por debajo';
+        const abs = Math.abs(s.bias).toFixed(2);
+        let t;
+        if (Math.abs(s.bias) < 0.1 * s.rmse) t = 'Prácticamente no hay desplazamiento fijo: la estación no lee sistemáticamente ni alto ni bajo.';
+        else if (Math.abs(s.bias) > 0.7 * s.rmse) t = 'Casi todo el error es este desplazamiento fijo: quitándolo, el error que queda es pequeño.';
+        else if (Math.abs(s.bias) > 0.3 * s.rmse) t = 'Parte del error es desplazamiento fijo y parte es variación de día a día.';
+        else t = 'El desplazamiento es solo una parte pequeña del error: la mayor parte es variación de día a día.';
+        return 'La estación lee en promedio ' + abs + ' ' + s.unit + ' ' + dir + ' del valor oficial. Eso es un desplazamiento fijo, no azar: se corrige con un ajuste (ver calibración). ' + t;
+    }
+    function interpretRmseVsMae(s) {
+        if (s.rmse > 1.4 * s.mae) return 'El RMSE es bastante mayor que el MAE: hubo unos pocos días con errores mucho mayores que el resto. Vale la pena revisar esos días en la tabla de abajo.';
+        return 'El RMSE y el MAE son parecidos: el error es parejo, día a día, sin días raros que lo disparen.';
+    }
+
+    function escHtml(s) {
+        return String(s === null || s === undefined ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function buildReportHTML() {
+        const stationKey = document.getElementById('stationSelect').value;
+        const station = STATIONS_INFO[stationKey];
+        const channel = document.getElementById('channelIdInput').value.trim();
+        const altitude = getAltitude();
+        const first = rawInsivumehData[0].fecha, last = rawInsivumehData[rawInsivumehData.length - 1].fecha;
+        const generated = new Date().toLocaleString('es-GT', { timeZone: 'America/Guatemala', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const stats = REPORT_VARS.map(v => computeStatsFor(v));
+        let detail = stats.find(s => s.varKey === document.getElementById('variableSelect').value && s.ok);
+        if (!detail) detail = stats.find(s => s.ok);
+        const vd = detail ? verdictFor(detail) : null;
+        const sign = v => (v >= 0 ? '+' : '−');
+
+        const summaryRows = stats.map(s => {
+            const v = verdictFor(s);
+            const cell = f => s.ok ? f() : '—';
+            return '<tr><td><strong>' + escHtml(s.name) + '</strong></td><td>' + s.n + ' / ' + s.total + '</td>' +
+                '<td>' + cell(() => s.r.toFixed(3)) + '</td><td>' + cell(() => s.r2.toFixed(3)) + '</td>' +
+                '<td>' + cell(() => s.rmse.toFixed(2) + ' ' + s.unit) + '</td><td>' + cell(() => s.mae.toFixed(2) + ' ' + s.unit) + '</td>' +
+                '<td>' + cell(() => (s.bias >= 0 ? '+' : '') + s.bias.toFixed(2) + ' ' + s.unit) + '</td>' +
+                '<td><strong>' + escHtml(v.level) + '</strong></td></tr>';
+        }).join('');
+
+        let detailSection = '';
+        if (detail) {
+            const s = detail;
+            const calibRows = [];
+            if (Math.abs(s.bias) < 0.1) {
+                calibRows.push('<li><strong>Desplazamiento:</strong> tan pequeño (' + s.bias.toFixed(2) + ' ' + s.unit + ') que no vale la pena corregirlo.</li>');
+            } else {
+                const offVal = (-s.bias).toFixed(2);
+                calibRows.push('<li><strong>Desplazamiento:</strong> en el portal web de la estación, campo <strong>' + OFFSET_NAMES[s.varKey] + '</strong>, escriba <strong>' + offVal + '</strong> (la estación lee ' + Math.abs(s.bias).toFixed(2) + ' ' + s.unit + ' ' + (s.bias >= 0 ? 'de más' : 'de menos') + '; este ajuste lo compensa). No hace falta reprogramar nada: el portal lo guarda y la estación lo aplica sola.</li>');
+            }
+            if (s.r2 >= 0.5) {
+                calibRows.push('<li><strong>Corrección lineal (si hay error de escala):</strong> EBC_corregida = ' + s.a.toFixed(4) + ' × EBC ' + sign(s.b) + ' ' + Math.abs(s.b).toFixed(3) + '. Esto corrige también que la estación exagere o achique los cambios, no solo el desplazamiento. Es confiable porque el R² es alto (' + s.r2.toFixed(3) + ').</li>');
+            } else {
+                calibRows.push('<li><strong>Corrección lineal:</strong> con un R² bajo (' + s.r2.toFixed(3) + '), la corrección lineal no es confiable. Primero mejore la medición (más días, revise la estación) y luego recalcule.</li>');
+            }
+            const dayRows = s.pairs.map(d => {
+                const ins = d.insivumeh === null ? 's/d' : d.insivumeh + ' ' + s.unit;
+                const ebc = d.ebc === null ? 'sin datos EBC' : d.ebc + ' ' + s.unit;
+                const delta = d.delta === null ? '—' : ((d.delta > 0 ? '+' : '') + d.delta + ' ' + s.unit);
+                return '<tr><td>' + escHtml(d.fecha) + '</td><td>' + ins + '</td><td>' + ebc + '</td><td>' + (d.nLecturas || 0) + '</td><td>' + delta + '</td></tr>';
+            }).join('');
+            detailSection =
+                '<h2>Los números, uno por uno — ' + escHtml(s.name) + ' (' + escHtml(s.unit) + ')</h2>' +
+                '<p><strong>Veredicto: ' + escHtml(vd.level) + '.</strong> ' + escHtml(vd.text) + '</p>' +
+                '<table><thead><tr><th>Número</th><th>Valor</th><th>Qué quiere decir</th></tr></thead><tbody>' +
+                '<tr><td><strong>R (correlación)</strong></td><td>' + s.r.toFixed(3) + '</td><td>' + escHtml(interpretR(s.r)) + '</td></tr>' +
+                '<tr><td><strong>R² (determinación)</strong></td><td>' + s.r2.toFixed(3) + '</td><td>' + escHtml(interpretR2(s.r2)) + '</td></tr>' +
+                '<tr><td><strong>RMSE (error típico)</strong></td><td>' + s.rmse.toFixed(2) + ' ' + escHtml(s.unit) + '</td><td>' + escHtml(interpretRMSE(s)) + '</td></tr>' +
+                '<tr><td><strong>MAE (error promedio)</strong></td><td>' + s.mae.toFixed(2) + ' ' + escHtml(s.unit) + '</td><td>' + escHtml(interpretMAE(s)) + ' ' + escHtml(interpretRmseVsMae(s)) + '</td></tr>' +
+                '<tr><td><strong>Sesgo (EBC − INSIVUMEH)</strong></td><td>' + (s.bias >= 0 ? '+' : '') + s.bias.toFixed(2) + ' ' + escHtml(s.unit) + '</td><td>' + escHtml(interpretBias(s)) + '</td></tr>' +
+                '<tr><td><strong>Días comparados</strong></td><td>' + s.n + ' de ' + s.total + '</td><td>' + (s.missingDays ? 'Faltan ' + s.missingDays + ' días sin datos de la estación: ' + escHtml(s.missingDates.join(', ')) + '.' : 'Todos los días del periodo tienen datos de la estación.') + ' En promedio, la estación envió ' + Math.round(s.avgLecturas) + ' lecturas por día (lo ideal son 288, una cada 5 minutos); el día con menos tuvo ' + s.minLecturas + '.</td></tr>' +
+                '</tbody></table>' +
+                '<h2>Calibración sugerida — ' + escHtml(s.name) + '</h2><ul>' + calibRows.join('') + '</ul>' +
+                '<h2>Día por día — ' + escHtml(s.name) + '</h2>' +
+                '<table><thead><tr><th>Fecha</th><th>INSIVUMEH (oficial)</th><th>Estación EBC</th><th>Lecturas EBC</th><th>Diferencia</th></tr></thead><tbody>' + dayRows + '</tbody></table>';
+        } else {
+            detailSection = '<h2>Los números, uno por uno</h2><p>No hay suficientes días en común con datos de la estación para calcular las estadísticas. Revise el ID del canal, el rango de fechas del CSV y el mapeo de campos.</p>';
+        }
+
+        const calibAll = stats.filter(s => s.ok).map(s => {
+            if (Math.abs(s.bias) < 0.1) return '<li><strong>' + escHtml(s.name) + ':</strong> desplazamiento despreciable (' + s.bias.toFixed(2) + ' ' + s.unit + '), no hace falta corregir.</li>';
+            return '<li><strong>' + escHtml(s.name) + ':</strong> ' + OFFSET_NAMES[s.varKey] + ' = ' + (-s.bias).toFixed(2) + ' ' + s.unit + ' (la estación lee ' + Math.abs(s.bias).toFixed(2) + ' ' + s.unit + ' ' + (s.bias >= 0 ? 'de más' : 'de menos') + ').</li>';
+        }).join('');
+
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>Informe de validación EBC — ' + escHtml(station.name) + ' (' + escHtml(first) + ' a ' + escHtml(last) + ')</title>' +
+            '<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:24px auto;padding:0 20px;color:#1e293b;line-height:1.55}' +
+            'h1{font-size:24px;margin-bottom:4px}h2{font-size:18px;margin-top:28px;border-bottom:2px solid #0284c7;padding-bottom:4px}' +
+            '.meta{color:#64748b;font-size:14px;margin-bottom:16px}.verdict{background:#e0f2fe;border-left:4px solid #0284c7;padding:12px 16px;border-radius:6px}' +
+            'table{border-collapse:collapse;width:100%;margin:12px 0;font-size:14px}th,td{border:1px solid #cbd5e1;padding:7px 9px;text-align:left}th{background:#f1f5f9}' +
+            'ul{padding-left:20px}.note{background:#fef9c3;border-left:4px solid #eab308;padding:10px 14px;border-radius:6px}' +
+            '.printbtn{background:#0284c7;color:#fff;border:none;padding:9px 18px;border-radius:6px;font-weight:600;cursor:pointer;font-size:14px}' +
+            '@media print{.printbtn{display:none}body{margin:0;max-width:none}}</style></head><body>' +
+            '<button class="printbtn" onclick="window.print()">Imprimir / guardar como PDF</button>' +
+            '<h1>Informe de validación — Estación EBC vs INSIVUMEH</h1>' +
+            '<div class="meta">Estación: <strong>' + escHtml(station.name) + '</strong> (canal ThingSpeak #' + escHtml(channel) + ')' +
+            (altitude !== null ? ' · Altitud: ' + escHtml(altitude) + ' m s.n.m.' : ' · Altitud: sin definir') +
+            '<br>Periodo: <strong>' + escHtml(first) + ' a ' + escHtml(last) + '</strong> (' + rawInsivumehData.length + ' días del INSIVUMEH)' +
+            '<br>Generado: ' + escHtml(generated) + ' (hora de Guatemala) · Autor: Marlon Estuardo Alvarado Kuckling · Red EBC Kuckling · Licencia CC BY-NC-SA 4.0</div>' +
+            '<div class="verdict"><strong>En resumen.</strong> ' + (vd ? escHtml(vd.text) : 'No hay datos suficientes para evaluar.') + '</div>' +
+            '<h2>Resumen por variable</h2>' +
+            '<table><thead><tr><th>Variable</th><th>Días</th><th>R</th><th>R²</th><th>RMSE</th><th>MAE</th><th>Sesgo</th><th>Veredicto</th></tr></thead><tbody>' + summaryRows + '</tbody></table>' +
+            detailSection +
+            '<h2>Calibración sugerida (todas las variables)</h2><ul>' + (calibAll || '<li>Sin datos para calcular.</li>') + '</ul>' +
+            '<h2>Qué significa cada número</h2><ul>' +
+            '<li><strong>R (correlación, de −1 a 1):</strong> dice si las dos series se mueven juntas. 1 es perfecto (suben y bajan al mismo tiempo), 0 es nada, y negativo es que se mueven al revés. No dice si los valores son iguales, solo si van en la misma dirección.</li>' +
+            '<li><strong>R² (determinación, de 0 a 1):</strong> es R al cuadrado. Dice qué parte de los cambios del valor oficial también los capta la estación. R² 0.86 = el 86 % de los cambios están explicados; el resto es error.</li>' +
+            '<li><strong>RMSE (error típico):</strong> el tamaño habitual del error, en la misma unidad que se mide (°C, % o hPa). Castiga más los errores grandes que el MAE, así que si el RMSE es mucho mayor que el MAE, hubo unos pocos días con errores grandes.</li>' +
+            '<li><strong>MAE (error promedio):</strong> la diferencia promedio entre la estación y el valor oficial, sin importar el signo. Es el error "de todos los días".</li>' +
+            '<li><strong>Sesgo:</strong> la diferencia promedio con signo. Si es +2 hPa, la estación lee siempre 2 hPa de más: es un desplazamiento fijo y se corrige con un ajuste. Si es casi cero, el error es puro azar día a día.</li>' +
+            '<li><strong>Días comparados:</strong> cuántos días tienen dato en los dos lados. Con pocos días, todas las cifras son orientativas.</li></ul>' +
+            '<h2>Cómo se hizo y qué no dice este informe</h2><ul>' +
+            '<li>La estación EBC lee cada 5 minutos; el comparador promedia las lecturas de cada día (media, máxima y mínima). El INSIVUMEH publica valores diarios oficiales. La máxima y la mínima de la EBC son las de sus lecturas: si un día faltan lecturas, la máxima puede quedar baja y la mínima alta.</li>' +
+            '<li>Presión: la estación envía presión a nivel del mar; el comparador la convierte a nivel de estación con la altitud y la temperatura de cada lectura (inversión exacta de la fórmula del firmware). El INSIVUMEH publica en mmHg y se convierte a hPa.</li>' +
+            '<li>Los valores imposibles del sensor se descartan antes de promediar. Los valores oficiales imposibles también conviene revisarlos: un solo dato oficial malo puede arruinar toda la estadística (en Cobán pasó con un 435.9 mmHg del 27 de octubre de 2026).</li>' +
+            '<li>Lluvia: la estación no tiene pluviómetro, así que no se compara. Su "índice de lluvia" es una estimación, no lluvia medida.</li>' +
+            '<li>Este informe compara, no certifica: dice qué tan cerca mide la estación del valor oficial en este periodo y con estos días. Los datos crudos (CSV del INSIVUMEH y lecturas de ThingSpeak) se pueden descargar desde el comparador para verificarlo.</li></ul>' +
+            '<p class="note">Generado por el comparador Red EBC Kuckling vs INSIVUMEH. Si un número no cuadra con lo que usted ve en la pantalla, revise primero el mapeo de campos y la altitud: son las dos cosas que más cambian el resultado.</p>' +
+            '</body></html>';
+    }
+
+    function triggerDownloadHTML(html, filename) {
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function downloadReport() {
+        if (rawInsivumehData.length === 0) return alert('Cargue primero el CSV del INSIVUMEH.');
+        if (Object.keys(thingSpeakFeedsByDate).length === 0) return alert('Aún no hay datos de la estación. Revise el ID del canal.');
+        const stationKey = document.getElementById('stationSelect').value;
+        const first = rawInsivumehData[0].fecha, last = rawInsivumehData[rawInsivumehData.length - 1].fecha;
+        triggerDownloadHTML(buildReportHTML(), 'Informe_Validacion_EBC_' + stationKey + '_' + first + '_a_' + last + '.html');
+    }
+
     // ---------- Descargas ----------
     function triggerDownload(text, filename) {
         const blob = new Blob(['\uFEFF' + text], { type: 'text/csv;charset=utf-8;' });
@@ -676,7 +1050,7 @@
 
     function downloadRawThingSpeak() {
         if (thingSpeakRawFeeds.length === 0) return alert('No hay datos descargados desde la API de ThingSpeak.');
-        let csv = 'created_at,entry_id,field1_temp_C,field2_hum_pct,field3_presion_MSL_hPa,field4_rocio_C,field5_prob_lluvia,field6_LCL_m\n';
+        let csv = 'created_at,entry_id,field1,field2,field3,field4,field5,field6\n';
         thingSpeakRawFeeds.forEach(f => { csv += `${f.created_at},${f.entry_id},${f.field1 ?? ''},${f.field2 ?? ''},${f.field3 ?? ''},${f.field4 ?? ''},${f.field5 ?? ''},${f.field6 ?? ''}\n`; });
         triggerDownload(csv, '02_Datos_Crudos_ThingSpeak_API_REST.csv');
     }

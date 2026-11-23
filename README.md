@@ -86,6 +86,7 @@ Aparecen las métricas, la sugerencia de calibración, la serie temporal, el dia
 
 | Botón | Qué hace |
 |---|---|
+| **Informe de validación (.html)** | Descarga un informe completo del periodo: resumen por variable, cada número explicado en palabras simples (qué es R, R², RMSE, MAE y el sesgo, y qué dice de *esta* estación), un veredicto por variable, la calibración sugerida con el campo del portal (offT / offHum / offP) y la tabla día por día. Se abre en el navegador y tiene su propio botón para imprimir o guardar como PDF. |
 | **Crudo INSIVUMEH (.csv)** | Descarga los datos del INSIVUMEH tal como se leyeron (la presión sin convertir, en mmHg). |
 | **Crudo ThingSpeak API (.csv)** | Descarga todas las lecturas de la estación usadas en el análisis. |
 | **Exportar Procesado** | Descarga la tabla cruzada con diferencias y error relativo. |
@@ -184,6 +185,12 @@ El comparador trae precargadas tres estaciones de la red EBC Kuckling, cada una 
 | Gualán | 155 m |
 | Cobán | 1,306 m |
 | El Teocinte | 1,242 m |
+
+## 🌍 Cualquier estación pública, solo con el ID
+
+No hace falta que sea una EBC: basta escribir el **ID de cualquier canal público de ThingSpeak** en el campo de la tarjeta 1 (o elegir "Otra estación (cualquiera)") y el comparador se conecta. El mapeo de campos se detecta solo por el nombre de cada campo del canal (temperatura, humedad, presión), con conversión de unidades automática (°F → °C, inHg o mmHg → hPa). Si la estación está en otro lugar, escribe su **altitud** en el campo de la tarjeta 1: se usa para convertir la presión a nivel de estación. Las lecturas imposibles de un sensor averiado (por ejemplo −130 °C) se descartan para no contaminar la comparación.
+
+**El límite honesto:** la comparación necesita los datos oficiales de esa localidad. Sube en la tarjeta 2 el **CSV del INSIVUMEH de esa estación** (cualquier estación oficial sirve; las columnas se detectan solas). Sin datos oficiales de ese lugar no hay con qué comparar.
 
 ---
 
