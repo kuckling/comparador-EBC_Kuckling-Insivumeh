@@ -3,9 +3,9 @@
 </p>
 
 <p align="center">
-  <img alt="Licencia MIT" src="https://img.shields.io/badge/licencia-MIT-f59e0b?style=for-the-badge">
-  <img alt="Datos" src="https://img.shields.io/badge/datos-ThingSpeak%20%2B%20INSIVUMEH-2563eb?style=for-the-badge">
-  <img alt="Sin instalación" src="https://img.shields.io/badge/instalaci%C3%B3n-ninguna-16a34a?style=for-the-badge">
+  <a href="LICENSE"><img alt="Licencia CC BY-NC-SA 4.0" src="https://img.shields.io/badge/licencia-CC%20BY--NC--SA%204.0-f59e0b?style=for-the-badge"></a>
+  <a href="https://kuckling.github.io/comparador-EBC_Kuckling-Insivumeh/"><img alt="Datos" src="https://img.shields.io/badge/datos-ThingSpeak%20%2B%20INSIVUMEH-2563eb?style=for-the-badge"></a>
+  <a href="#-requisitos-técnicos"><img alt="Sin instalación" src="https://img.shields.io/badge/instalaci%C3%B3n-ninguna-16a34a?style=for-the-badge"></a>
 </p>
 
 <h3 align="center">Compara los datos de tu estación meteorológica con los de una estación oficial del INSIVUMEH.<br>Sin instalar nada. Sin programar. Solo un archivo CSV.</h3>
@@ -243,7 +243,9 @@ Descarga **Crudo INSIVUMEH** y **Crudo ThingSpeak** y repite el cálculo en tu h
 
 ## 📄 Licencia
 
-El comparador se distribuye con licencia **MIT**: puedes usarlo, copiarlo, modificarlo y compartirlo, conservando el aviso de copyright. Consulta el archivo [`LICENSE`](LICENSE).
+El comparador se distribuye con licencia **Creative Commons Atribución-NoComercial-CompartirIgual 4.0 Internacional (CC BY-NC-SA 4.0)**: puedes usarlo, copiarlo, modificarlo y compartirlo con fines no comerciales, conservando el aviso de copyright y compartiendo las obras derivadas bajo la misma licencia. Consulta el archivo [`LICENSE`](LICENSE).
+
+> **Cambio de licencia:** las versiones anteriores se distribuyeron bajo licencia MIT. A partir del 23 de noviembre de 2026, la licencia es CC BY-NC-SA 4.0.
 
 ---
 
