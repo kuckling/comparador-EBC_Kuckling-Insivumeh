@@ -911,6 +911,65 @@
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // Gráficas para el informe: se dibujan en lienzos fuera de la pantalla (no se ven
+    // ni tocan las gráficas de la página) y se convierten a imagen para incrustarlas
+    // en el informe. Si algo falla, el informe sale sin gráficas, nunca se rompe.
+    function chartImagesFor(s) {
+        try {
+            const pairs = s.pairs;
+            const unit = s.unit;
+            const mkCanvas = () => { const c = document.createElement('canvas'); c.width = 900; c.height = 380; return c; };
+            const chartOpts = () => ({
+                responsive: false, animation: false, maintainAspectRatio: false,
+                plugins: { legend: { labels: { color: '#1e293b' } } },
+                scales: {
+                    x: { ticks: { color: '#475569' }, grid: { color: '#e2e8f0' } },
+                    y: { ticks: { color: '#475569' }, grid: { color: '#e2e8f0' } }
+                }
+            });
+            // Serie temporal comparativa.
+            const c1 = mkCanvas();
+            const line = new Chart(c1.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: pairs.map(d => d.fecha),
+                    datasets: [
+                        { label: 'INSIVUMEH (' + unit + ')', data: pairs.map(d => d.insivumeh), borderColor: '#ea580c', backgroundColor: 'rgba(234,88,12,0.1)', borderWidth: 2, tension: 0.15, spanGaps: false },
+                        { label: 'Red EBC (' + unit + ')', data: pairs.map(d => d.ebc), borderColor: '#0284c7', backgroundColor: 'rgba(2,132,199,0.1)', borderWidth: 2, tension: 0.15, spanGaps: false }
+                    ]
+                },
+                options: chartOpts()
+            });
+            const lineImg = line.toBase64Image();
+            line.destroy();
+            // Diagrama de dispersión con línea 1:1.
+            const withBoth = pairs.filter(d => d.delta !== null);
+            const scatterData = withBoth.map(d => ({ x: d.insivumeh, y: d.ebc }));
+            const vals = scatterData.flatMap(p => [p.x, p.y]);
+            const lo = vals.length ? Math.min(...vals) : 0, hi = vals.length ? Math.max(...vals) : 1;
+            const c2 = mkCanvas();
+            const scatterOpts = chartOpts();
+            scatterOpts.scales.x.title = { display: true, text: 'INSIVUMEH (' + unit + ')', color: '#475569' };
+            scatterOpts.scales.y.title = { display: true, text: 'Red EBC (' + unit + ')', color: '#475569' };
+            const scatter = new Chart(c2.getContext('2d'), {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        { label: 'Días comparados (' + unit + ')', data: scatterData, backgroundColor: '#7c3aed' },
+                        { label: 'Línea 1:1 (calibración perfecta)', data: [{ x: lo, y: lo }, { x: hi, y: hi }], type: 'line', showLine: true, borderColor: '#16a34a', borderDash: [6, 4], borderWidth: 1.5, pointRadius: 0 }
+                    ]
+                },
+                options: scatterOpts
+            });
+            const scatterImg = scatter.toBase64Image();
+            scatter.destroy();
+            return { line: lineImg, scatter: scatterImg };
+        } catch (e) {
+            console.warn('No se pudieron generar las gráficas del informe:', e);
+            return { line: null, scatter: null };
+        }
+    }
+
     function buildReportHTML() {
         const stationKey = document.getElementById('stationSelect').value;
         const station = STATIONS_INFO[stationKey];
@@ -934,9 +993,10 @@
                 '<td><strong>' + escHtml(v.level) + '</strong></td></tr>';
         }).join('');
 
-        let detailSection = '';
-        if (detail) {
-            const s = detail;
+        // Detalle completo de CADA variable con datos: un solo informe lo trae todo,
+        // no hace falta descargar uno por variable.
+        function detailSectionFor(s) {
+            const v = verdictFor(s);
             const calibRows = [];
             if (Math.abs(s.bias) < 0.1) {
                 calibRows.push('<li><strong>Desplazamiento:</strong> tan pequeño (' + s.bias.toFixed(2) + ' ' + s.unit + ') que no vale la pena corregirlo.</li>');
@@ -955,9 +1015,14 @@
                 const delta = d.delta === null ? '—' : ((d.delta > 0 ? '+' : '') + d.delta + ' ' + s.unit);
                 return '<tr><td>' + escHtml(d.fecha) + '</td><td>' + ins + '</td><td>' + ebc + '</td><td>' + (d.nLecturas || 0) + '</td><td>' + delta + '</td></tr>';
             }).join('');
-            detailSection =
-                '<h2>Los números, uno por uno — ' + escHtml(s.name) + ' (' + escHtml(s.unit) + ')</h2>' +
-                '<p><strong>Veredicto: ' + escHtml(vd.level) + '.</strong> ' + escHtml(vd.text) + '</p>' +
+            const imgs = chartImagesFor(s);
+            const chartsHtml = (imgs.line || imgs.scatter)
+                ? '<h3>Gráficas — ' + escHtml(s.name) + '</h3>' +
+                  (imgs.line ? '<p><strong>Serie temporal:</strong> la curva naranja es el INSIVUMEH y la azul es la estación, día por día.</p><img src="' + imgs.line + '" style="max-width:100%;height:auto" alt="Serie temporal ' + escHtml(s.name) + '">' : '') +
+                  (imgs.scatter ? '<p><strong>Dispersión:</strong> cada punto es un día (valor oficial contra valor de la estación). La línea verde es la calibración perfecta: mientras más pegados estén los puntos a ella, mejor mide la estación.</p><img src="' + imgs.scatter + '" style="max-width:100%;height:auto" alt="Dispersión ' + escHtml(s.name) + '">' : '')
+                : '';
+            return '<h2>Los números, uno por uno — ' + escHtml(s.name) + ' (' + escHtml(s.unit) + ')</h2>' +
+                '<p><strong>Veredicto: ' + escHtml(v.level) + '.</strong> ' + escHtml(v.text) + '</p>' +
                 '<table><thead><tr><th>Número</th><th>Valor</th><th>Qué quiere decir</th></tr></thead><tbody>' +
                 '<tr><td><strong>R (correlación)</strong></td><td>' + s.r.toFixed(3) + '</td><td>' + escHtml(interpretR(s.r)) + '</td></tr>' +
                 '<tr><td><strong>R² (determinación)</strong></td><td>' + s.r2.toFixed(3) + '</td><td>' + escHtml(interpretR2(s.r2)) + '</td></tr>' +
@@ -966,12 +1031,13 @@
                 '<tr><td><strong>Sesgo (EBC − INSIVUMEH)</strong></td><td>' + (s.bias >= 0 ? '+' : '') + s.bias.toFixed(2) + ' ' + escHtml(s.unit) + '</td><td>' + escHtml(interpretBias(s)) + '</td></tr>' +
                 '<tr><td><strong>Días comparados</strong></td><td>' + s.n + ' de ' + s.total + '</td><td>' + (s.missingDays ? 'Faltan ' + s.missingDays + ' días sin datos de la estación: ' + escHtml(s.missingDates.join(', ')) + '.' : 'Todos los días del periodo tienen datos de la estación.') + ' En promedio, la estación envió ' + Math.round(s.avgLecturas) + ' lecturas por día (lo ideal son 288, una cada 5 minutos); el día con menos tuvo ' + s.minLecturas + '.</td></tr>' +
                 '</tbody></table>' +
+                chartsHtml +
                 '<h2>Calibración sugerida — ' + escHtml(s.name) + '</h2><ul>' + calibRows.join('') + '</ul>' +
                 '<h2>Día por día — ' + escHtml(s.name) + '</h2>' +
                 '<table><thead><tr><th>Fecha</th><th>INSIVUMEH (oficial)</th><th>Estación EBC</th><th>Lecturas EBC</th><th>Diferencia</th></tr></thead><tbody>' + dayRows + '</tbody></table>';
-        } else {
-            detailSection = '<h2>Los números, uno por uno</h2><p>No hay suficientes días en común con datos de la estación para calcular las estadísticas. Revise el ID del canal, el rango de fechas del CSV y el mapeo de campos.</p>';
         }
+        const detailSections = stats.filter(s => s.ok).map(detailSectionFor).join('');
+        const detailSection = detailSections || '<h2>Los números, uno por uno</h2><p>No hay suficientes días en común con datos de la estación para calcular las estadísticas. Revise el ID del canal, el rango de fechas del CSV y el mapeo de campos.</p>';
 
         const calibAll = stats.filter(s => s.ok).map(s => {
             if (Math.abs(s.bias) < 0.1) return '<li><strong>' + escHtml(s.name) + ':</strong> desplazamiento despreciable (' + s.bias.toFixed(2) + ' ' + s.unit + '), no hace falta corregir.</li>';
@@ -992,7 +1058,7 @@
             (altitude !== null ? ' · Altitud: ' + escHtml(altitude) + ' m s.n.m.' : ' · Altitud: sin definir') +
             '<br>Periodo: <strong>' + escHtml(first) + ' a ' + escHtml(last) + '</strong> (' + rawInsivumehData.length + ' días del INSIVUMEH)' +
             '<br>Generado: ' + escHtml(generated) + ' (hora de Guatemala) · Autor: Marlon Estuardo Alvarado Kuckling · Red EBC Kuckling · Licencia CC BY-NC-SA 4.0</div>' +
-            '<div class="verdict"><strong>En resumen.</strong> ' + (vd ? escHtml(vd.text) : 'No hay datos suficientes para evaluar.') + '</div>' +
+            '<div class="verdict"><strong>En resumen' + (detail ? ' — ' + escHtml(detail.name) : '') + '.</strong> ' + (vd ? escHtml(vd.text) : 'No hay datos suficientes para evaluar.') + (detail ? ' <em>(R ' + detail.r.toFixed(3) + ' · error típico ' + detail.rmse.toFixed(2) + ' ' + escHtml(detail.unit) + ' · ' + detail.n + ' días comparados)</em>' : '') + '</div>' +
             '<h2>Resumen por variable</h2>' +
             '<table><thead><tr><th>Variable</th><th>Días</th><th>R</th><th>R²</th><th>RMSE</th><th>MAE</th><th>Sesgo</th><th>Veredicto</th></tr></thead><tbody>' + summaryRows + '</tbody></table>' +
             detailSection +
